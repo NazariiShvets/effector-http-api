@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "declaration": true,
+    "declarationDir": ".",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "newLine": "lf",
+    "incremental": true,
+    "keyofStringsOnly": true,
+    "noImplicitAny": true,
+    "allowUnreachableCode": false,
+    "strictBindCallApply": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "useUnknownInCatchVariables": true,
+
+    "baseUrl": "."
+  },
+
+  "include": ["./src"],
+  "exclude": ["node_modules"]
+}
