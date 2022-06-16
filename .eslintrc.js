@@ -75,7 +75,6 @@ module.exports = {
     "no-useless-catch": "error",
     "no-useless-computed-key": "error",
     "no-useless-concat": "error",
-    "no-useless-constructor": "error",
     "prefer-arrow-callback": "error",
     "prefer-template": "error",
     "eol-last": ["error", "always"],
