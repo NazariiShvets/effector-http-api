@@ -3,30 +3,43 @@ import type {
   AxiosRequestHeaders,
   AxiosResponse
 } from 'axios';
-import type { Effect, Store } from 'effector';
-import type { RequestConfig, RouteOptions } from './types';
+
 import deepmerge from 'deepmerge';
+
+import type { Effect } from 'effector';
+
 import { EffectorApiRoute } from './route';
 
-class EffectorApiController<AuthHeaders extends AxiosRequestHeaders> {
+import type {
+  ApiUnits,
+  ControllerRouteOptions,
+  RequestConfigHandler,
+  RouteOptions
+} from './types';
+
+class EffectorApiController<
+  AuthHeaders extends AxiosRequestHeaders,
+  CustomHeaders extends AxiosRequestHeaders
+> {
+  // eslint-disable-next-line no-useless-constructor
   public constructor(
     private readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>,
 
-    private readonly authHeaders: Store<AuthHeaders>,
+    private readonly units: ApiUnits<AuthHeaders, CustomHeaders>,
 
     private readonly urlSuffix: string,
 
-    private readonly options: RouteOptions
+    private readonly options: ControllerRouteOptions
   ) {}
 
   public createRoute = <Dto = void, Contract = void>(
-    config: RequestConfig<Dto>,
-    options: Partial<RouteOptions> = {}
+    config: RequestConfigHandler<Dto>,
+    options: Partial<RouteOptions<Dto, Contract>> = {}
   ) =>
-    new EffectorApiRoute<Dto, Contract, AuthHeaders>(
+    new EffectorApiRoute<Dto, Contract, AuthHeaders, CustomHeaders>(
       this.baseRequestFx,
       this.urlSuffix,
-      this.authHeaders,
+      this.units,
       config,
       deepmerge(this.options, options)
     ).fx;

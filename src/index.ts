@@ -1,11 +1,12 @@
 import type { AxiosRequestConfig } from 'axios';
 
 import { EffectorApi } from './api';
-import type { RouteOptions } from './types';
 
-const createEffectorApi = (
+import type { ControllerRouteOptions } from './types';
+
+const createHttpApi = (
   baseConfig: AxiosRequestConfig = {},
-  routeOptions: RouteOptions = {}
+  routeOptions: ControllerRouteOptions = {}
 ) => new EffectorApi(baseConfig, routeOptions);
 
-export { createEffectorApi };
+export { createHttpApi };

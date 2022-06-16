@@ -3,77 +3,91 @@ import type {
   AxiosRequestHeaders,
   AxiosResponse
 } from 'axios';
-import type { Effect, Store } from 'effector';
-import { attach } from 'effector';
+
 import deepmerge from 'deepmerge';
 
+import type { Effect } from 'effector';
+import { attach, createEffect } from 'effector';
+
+import { createBatchedEffect, createMockEffect } from './lib';
+
 import type {
-  NormalizedRequestConfig,
-  RequestConfig,
-  RouteFx,
+  ApiUnits,
+  ControllerRouteOptions,
+  NormalizedRequestHandler,
+  RequestConfigHandler,
   RouteOptions
 } from './types';
-import { createEffect } from 'effector/compat';
 
-class EffectorApiRoute<Dto, Contract, AuthHeaders extends AxiosRequestHeaders> {
+class EffectorApiRoute<
+  Dto,
+  Contract,
+  AuthHeaders extends AxiosRequestHeaders,
+  CustomHeaders extends AxiosRequestHeaders
+> {
   public constructor(
     private readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>,
 
     private readonly prefix: string,
 
-    private readonly authHeaders: Store<AuthHeaders>,
+    private readonly units: ApiUnits<AuthHeaders, CustomHeaders>,
 
-    private readonly routeConfig: RequestConfig<Dto>,
+    private readonly routeConfigHandler: RequestConfigHandler<Dto>,
 
-    options: Partial<RouteOptions> = {}
+    options: Partial<RouteOptions<Dto, Contract>> = {}
   ) {
     this.mergeOptions(options);
 
     this.fx = this.createFx();
   }
 
-  private options: RouteOptions = {
-    abortOnConcurrent: false,
-    auth: false
+  private options: RouteOptions<Dto, Contract> = {
+    disableAuth: false,
+
+    batchConcurrentRequests: false,
+
+    mapRawResponse: (data: AxiosResponse<Contract, Dto>) => data.data
   };
 
-  private abortController = new AbortController();
-
-  public readonly fx: RouteFx<Dto, Contract>;
+  public readonly fx: Effect<Dto, Contract>;
 
   private readonly createFx = () => {
-    const requestFx = createEffect<Dto, Contract>() as RouteFx<Dto, Contract>;
+    if (this.options.mock)
+      return createMockEffect<Dto, Contract>(this.options.mock);
 
-    const internalFx = attach({
-      source: this.authHeaders,
-      mapParams: (dto: Dto, authHeaders): AxiosRequestConfig => {
-        const config = this.normalizeConfig(this.routeConfig)(dto);
+    const createFx = this.options.batchConcurrentRequests
+      ? createBatchedEffect
+      : createEffect;
+
+    return attach({
+      source: this.units,
+      mapParams: (dto: Dto, units): AxiosRequestConfig => {
+        const config = this.normalizeConfigHandler(this.routeConfigHandler)(
+          dto
+        );
+
+        config.headers = deepmerge(
+          config.headers ?? {},
+          units.customHeaders ?? {}
+        );
 
         this.attachPrefix(config);
 
-        if (this.options.auth) {
-          this.attachAuth(config, authHeaders);
+        if (!this.options.disableAuth) {
+          this.attachAuth(config, units.authHeaders);
         }
 
-        if (this.options.abortOnConcurrent) {
-          this.attachAbortController(config);
-        }
-
-        return config;
+        return this.formatConfig(config);
       },
-      effect: this.baseRequestFx
-    }) as unknown as Effect<Dto, AxiosResponse<Contract, Dto>>;
-
-    requestFx.use(async dto => internalFx(dto).then(data => data.data));
-
-    requestFx.doneParams = internalFx.doneData;
-
-    return requestFx;
+      effect: createFx(async (params: AxiosRequestConfig) =>
+        this.baseRequestFx(params).then(this.options.mapRawResponse)
+      )
+    }) as unknown as Effect<Dto, Contract>;
   };
 
-  private readonly normalizeConfig = (
-    config: RequestConfig<Dto>
-  ): NormalizedRequestConfig<Dto> => {
+  private readonly normalizeConfigHandler = (
+    config: RequestConfigHandler<Dto>
+  ): NormalizedRequestHandler<Dto> => {
     if (typeof config === 'function') {
       return dto => config(dto);
     }
@@ -81,7 +95,9 @@ class EffectorApiRoute<Dto, Contract, AuthHeaders extends AxiosRequestHeaders> {
     return dto => ({ ...config, data: dto });
   };
 
-  private readonly mergeOptions = (options: Partial<RouteOptions>) => {
+  private readonly mergeOptions = (
+    options: Partial<ControllerRouteOptions>
+  ) => {
     this.options = deepmerge(this.options, options);
   };
 
@@ -99,12 +115,26 @@ class EffectorApiRoute<Dto, Contract, AuthHeaders extends AxiosRequestHeaders> {
     config.headers = deepmerge(config.headers ?? {}, authHeaders ?? {});
   };
 
-  private readonly attachAbortController = (config: AxiosRequestConfig) => {
-    this.abortController.abort();
+  private readonly attachDataAsParams = (config: AxiosRequestConfig) => {
+    config.params = { ...(config.params ?? {}), ...config.data };
+  };
 
-    this.abortController = new AbortController();
+  private readonly formatConfig = (config: AxiosRequestConfig) => {
+    if (!config.method) {
+      config.method = 'GET';
+    }
 
-    config.signal = this.abortController.signal;
+    if (config.method.toUpperCase() === 'GET') {
+      if (!!config.data && typeof config.data === 'object') {
+        if (config.data && config.params) {
+          //TODO: add console.warn to prevent usage
+        }
+
+        this.attachDataAsParams(config);
+      }
+    }
+
+    return config;
   };
 }
 

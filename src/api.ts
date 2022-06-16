@@ -1,5 +1,3 @@
-import type { Effect } from 'effector';
-import { attach, createEffect, createStore, is } from 'effector';
 import type {
   AxiosInstance,
   AxiosRequestConfig,
@@ -7,31 +5,26 @@ import type {
   AxiosResponse
 } from 'axios';
 import axios from 'axios';
+
 import deepmerge from 'deepmerge';
 
-import type { ApiUnits, RouteOptions } from './types';
+import type { Effect } from 'effector';
+import { createEffect, createStore, is } from 'effector';
+
 import { EffectorApiController } from './controller';
+
+import type { ApiUnits, ControllerRouteOptions } from './types';
 
 class EffectorApi {
   public constructor(
     private readonly baseConfig: AxiosRequestConfig = {},
-    private readonly routeOptions: RouteOptions = {}
+    private readonly routeOptions: ControllerRouteOptions = {}
   ) {
     this.instance = axios.create(this.baseConfig);
 
-    this.baseFx = attach({
-      source: this.units.customHeaders,
-
-      mapParams: (params: AxiosRequestConfig, headers) => {
-        params.headers = deepmerge(headers, params.headers ?? {});
-
-        return this.formatConfig(params);
-      },
-
-      effect: createEffect(async (config: AxiosRequestConfig) =>
-        this.instance.request(config)
-      )
-    });
+    this.baseRequestFx = createEffect(async (config: AxiosRequestConfig) =>
+      this.instance.request(config)
+    );
   }
 
   private readonly units: ApiUnits<AxiosRequestHeaders, AxiosRequestHeaders> = {
@@ -39,37 +32,9 @@ class EffectorApi {
     customHeaders: createStore({})
   };
 
-  private readonly options = {
-    dataToParamsMethods: ['GET']
-  };
-
   private readonly instance: AxiosInstance;
 
-  public readonly baseFx: Effect<AxiosRequestConfig, AxiosResponse>;
-
-  private readonly formatConfig = (config: AxiosRequestConfig) => {
-    if (!config.method) {
-      config.method = 'GET';
-    }
-
-    if (
-      this.options.dataToParamsMethods.includes(config.method.toUpperCase())
-    ) {
-      if (!!config.data && typeof config.data === 'object') {
-        if (config.data && config.params) {
-          //TODO: add console.warn to prevent usage
-        }
-
-        this.attachDataAsParams(config);
-      }
-    }
-
-    return config;
-  };
-
-  private readonly attachDataAsParams = (config: AxiosRequestConfig) => {
-    config.params = { ...(config.params ?? {}), ...config.data };
-  };
+  public readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>;
 
   public readonly headers = <
     Auth extends AxiosRequestHeaders,
@@ -90,11 +55,11 @@ class EffectorApi {
 
   public readonly createController = (
     urlSuffix = '',
-    routeOptions: RouteOptions = {}
+    routeOptions: ControllerRouteOptions = {}
   ) =>
     new EffectorApiController(
-      this.baseFx,
-      this.units.authHeaders,
+      this.baseRequestFx,
+      this.units,
       urlSuffix,
       deepmerge(this.routeOptions, routeOptions)
     );
