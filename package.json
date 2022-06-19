@@ -2,7 +2,8 @@
   "name": "effector-http-api",
   "version": "0.0.5",
   "description": "Setup API with ease",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.js",
   "scripts": {
     "build": "yarn rollup --config ./rollup.config.js"
   },
