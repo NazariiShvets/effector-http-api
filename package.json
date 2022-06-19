@@ -1,7 +1,7 @@
 {
   "name": "effector-http-api",
   "version": "0.0.1",
-  "description": "",
+  "description": "Setup API with ease",
   "main": "index.js",
   "scripts": {
     "prePublishOnly": "npm run build",
