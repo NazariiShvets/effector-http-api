@@ -10,3 +10,4 @@ const createHttpApi = (
 ) => new EffectorApi(baseConfig, routeOptions);
 
 export { createHttpApi };
+export { ContentType } from './types';

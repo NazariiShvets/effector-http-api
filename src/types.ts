@@ -58,8 +58,8 @@ type ApiUnits<
   Auth extends AxiosRequestHeaders,
   Custom extends AxiosRequestHeaders
 > = {
-  authHeaders: Store<Auth>;
-  customHeaders: Store<Custom>;
+  auth: Store<Auth>;
+  custom: Store<Custom>;
 };
 
 enum ContentType {

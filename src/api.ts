@@ -35,8 +35,8 @@ class EffectorApi {
   }
 
   private readonly units: ApiUnits<AxiosRequestHeaders, AxiosRequestHeaders> = {
-    authHeaders: createStore({}),
-    customHeaders: createStore({})
+    auth: createStore({}),
+    custom: createStore({})
   };
 
   private readonly instance: AxiosInstance;
@@ -49,14 +49,14 @@ class EffectorApi {
   >(
     source: Partial<ApiUnits<Auth, Custom>>
   ) => {
-    const { customHeaders, authHeaders } = source;
+    const { custom, auth } = source;
 
-    if (is.store(customHeaders)) {
-      this.units.customHeaders = customHeaders;
+    if (is.store(custom)) {
+      this.units.custom = custom;
     }
 
-    if (is.store(authHeaders)) {
-      this.units.authHeaders = authHeaders;
+    if (is.store(auth)) {
+      this.units.auth = auth;
     }
   };
 

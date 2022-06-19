@@ -59,22 +59,16 @@ class EffectorApiRoute<
       mapParams: (dto: Dto, units): AxiosRequestConfig => {
         const config = normalizeConfigHandler(this.routeConfigHandler)(dto);
 
-        config.headers = deepmerge(
-          config.headers ?? {},
-          units.customHeaders ?? {}
-        );
+        config.headers = deepmerge(config.headers ?? {}, units.auth ?? {});
 
         config.url = `${this.prefix}${config.url}`;
 
         if (!this.options.disableAuth) {
-          if (!units.authHeaders) {
+          if (!units.auth) {
             //TODO: Add console.warn to prevent usage {auth:true} without headers
           }
 
-          config.headers = deepmerge(
-            config.headers ?? {},
-            units.authHeaders ?? {}
-          );
+          config.headers = deepmerge(config.headers ?? {}, units.auth ?? {});
         }
 
         return formatConfig(config);
