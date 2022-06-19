@@ -1,0 +1,92 @@
+<%
+const { utils, route, config } = it;
+
+const { requestBodyInfo, responseBodyInfo } = route;
+
+const { _ } = utils;
+
+const { parameters, path, method, payload, query, requestParams } = route.request;
+
+const routeDocs = includeFile("@base/route-docs", { config, route, utils });
+
+const queryName = (query && query.name) || "query";
+
+const pathParams = _.values(parameters);
+
+const pathParamsNames = _.map(pathParams, "name");
+
+const rawWrapperArgs = _.compact([ ...pathParams, query, payload ])
+
+// RequestParams["type"]
+const requestContentKind = {
+    "JSON": "ContentType.Json",
+    "URL_ENCODED": "ContentType.UrlEncoded",
+    "FORM_DATA": "ContentType.FormData",
+}
+// RequestParams["format"]
+const responseContentKind = {
+    "JSON": '"json"',
+    "IMAGE": '"blob"',
+    "FORM_DATA":'"document"'
+}
+
+const bodyTmpl = _.get(payload, "name") || null;
+const queryTmpl = (query != null && queryName) || null;
+const bodyContentKindTmpl = requestContentKind[requestBodyInfo.contentKind] || null;
+const responseFormatTmpl = responseContentKind[responseBodyInfo.success && responseBodyInfo.success.schema && responseBodyInfo.success.schema.contentKind] || null;
+
+const isVoidRequest = rawWrapperArgs.length === 0;
+const isSingleArg = rawWrapperArgs.length === 1;
+const isWrappedInDto = rawWrapperArgs.length > 1;
+
+const wrapperArgs = _
+    // Sort by optionality
+    .sortBy(rawWrapperArgs, [o => o.optional])
+    .reduce((dtoStr,{ name, type,optional },index,argsArray) => {
+      const isFirst = index === 0;
+      const isLast = index === argsArray.length - 1;
+
+
+      if(isFirst && isWrappedInDto){
+        dtoStr += 'dto: { ';
+      }
+
+      const delimiter = !optional ? ':' : '?:'
+
+      dtoStr += `${name}${delimiter}${type}`;
+
+      if(isWrappedInDto){
+        dtoStr += !isLast ? ';' : '}'
+      }
+
+      return dtoStr
+    },``);
+
+const wrapperArgsType = isWrappedInDto ? wrapperArgs.slice(`dto: `.length) : isVoidRequest ? 'void' : rawWrapperArgs[0].type
+const wrapperArgsName = isWrappedInDto ? 'dto' : isVoidRequest ? '' : rawWrapperArgs[0].name
+
+const routePathWithParam = !isWrappedInDto ? path : pathParamsNames.reduce((resultPath, name) => path.replace('/${' + `${name}` + '}', '/${dto.' + `${name}` + '}'),path)
+
+
+const isQueryProvidedForGetMethod = _.upperCase(method) === 'GET' && !!queryTmpl;
+
+const isSkipHandler = isVoidRequest || (isSingleArg && (!!bodyTmpl || isQueryProvidedForGetMethod));
+
+%>
+/**
+<%~ routeDocs.description %>
+
+ * <% /* Here you can add some other JSDoc tags */ %>
+
+<%~ routeDocs.lines %>
+
+ */
+<%~ route.routeName.usage %> : api.createRoute<<%~ wrapperArgsType %>, <%~ route.response.type %>>(<%~ !isSkipHandler ? `(${wrapperArgsName}) =>` : '' %> ({
+        url: `<%~ routePathWithParam %>`,
+        method: '<%~ _.upperCase(method) %>',
+        <%~ !isQueryProvidedForGetMethod && queryTmpl ? `params: ${isWrappedInDto ? 'dto.' : '' } ${queryTmpl},` : '' %>
+        <%~ !isSkipHandler && bodyTmpl ?  `data: ${isWrappedInDto ? 'dto.' : '' } ${bodyTmpl},` : '' %>
+        <%~ bodyContentKindTmpl && bodyContentKindTmpl !== requestContentKind.JSON ? `type: ${bodyContentKindTmpl},` : '' %>
+        <%~ responseFormatTmpl ? `responseType: ${responseFormatTmpl},` : '' %>
+    })
+    ),

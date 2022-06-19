@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prePublishOnly": "npm run build",
-    "build": "yarn rollup --config ./rollup.config.js"
+    "build": "yarn rollup --config ./rollup.config.js",
+    "codegen:api:example-script": "node [codegen-config-file] [api-url] [destination-folder] [destination-file]"
   },
   "repository": {
     "type": "git",
@@ -49,6 +50,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript": "^1.0.1",
     "rollup-plugin-typescript2": "^0.32.0",
+    "swagger-typescript-api": "^9.3.1",
     "typescript": "^4.7.3"
   }
 }
