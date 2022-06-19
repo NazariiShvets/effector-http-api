@@ -1,5 +1,5 @@
 {
-  "name": "effector-api",
+  "name": "effector-http-api",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
