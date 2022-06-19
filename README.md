@@ -66,7 +66,7 @@ const users = {
 
 
     // If you dont need controller you can create route from `api` instance
-    createByUpload: controller.createRoute<{ file: File }>({
+    createByUpload: api.createRoute<{ file: File }>({
         url: '/upload/users',
         method: 'POST',
         // dto provided with this type converts to FormData under the hood
