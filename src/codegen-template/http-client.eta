@@ -1,1 +1,1 @@
-import { ContentType, createHttpApi } from 'effector-api';
+import { ContentType, createHttpApi } from 'effector-http-api';
