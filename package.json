@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "build": "yarn rollup --config ./rollup.config.js",
-    "codegen:api:example-script": "node [codegen-config-file] [api-url] [destination-folder] [destination-file]"
   },
   "repository": {
     "type": "git",
