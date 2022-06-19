@@ -242,7 +242,7 @@ const fileName = 'my-backend.ts';
 const outputDir = path.resolve(process.cwd(),'./src/shared/api');
 const urlToSwaggerSchema = 'my-backend.com/swagger-api';
 
-const pathToTemplate = path.resolve(process.cwd(), 'effector-http-api/codegen-template');
+const pathToTemplate = path.resolve(process.cwd(), 'node_modules', 'effector-http-api/codegen-template');
 
 generateApi({
     name: fileName,

@@ -59,7 +59,7 @@ const plugins =  [
   jsonPlugin(),
 
   copy({
-    targets: [{ src: 'src/codegen-template', dest: 'dist' },]
+    targets: [{ src: 'src/codegen-template', dest: '/' },]
   }),
 
   bundleSize()
