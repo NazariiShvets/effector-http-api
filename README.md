@@ -35,20 +35,22 @@ const api = createHttpApi({ baseUrl: 'my-backend.com/api' });
 const controller = api.createController('/users');
 
 const users = {
+    // createRoute<Dto, Contract>() returns Effect<Dto, Contract>
     getAll: controller.createRoute<void, User[]>({
         url:'/',
         // "GET" method is set by default, no need to add this line
         method:'GET'
     }),
     
-    get: controller.createRoute<User['id'], User>((id) => ({
-        url: `/${id}`,
-    })),
-    
     // dto provided to route pass to AxiosRequestConfig['data']
     create: controller.createRoute<CreateUserDto,User>({
         url: '/',
         method: 'POST'
+    }),
+
+    // In 'GET' request `dto` will be passed to url as query
+    getFiltered: controller.createRoute<FiltersDto, User[]>({
+        url:'/',
     }),
     
     // If you need to customize behavior of dto — use callback instead of config
@@ -58,8 +60,13 @@ const users = {
         data
     })),
 
+    get: controller.createRoute<User['id'], User>((id) => ({
+        url: `/${id}`,
+    })),
+
+
     // If you dont need controller you can create route from `api` instance
-    uploadFileWithUsers: controller.createRoute<{ file: File }>({
+    createByUpload: controller.createRoute<{ file: File }>({
         url: '/upload/users',
         method: 'POST',
         // dto provided with this type converts to FormData under the hood
@@ -143,6 +150,8 @@ const route = controller.createRoute<Dto,Contract>(config,{ batchConcurrentReque
 #### mapRawResponse:
 
 Custom resolver for mapping response
+
+By default `createRoute` has `(response) => response.data` mapper
 
 ```typescript
 type RouteOptions = {
