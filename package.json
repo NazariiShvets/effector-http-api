@@ -4,7 +4,6 @@
   "description": "Setup API with ease",
   "main": "index.js",
   "scripts": {
-    "prePublishOnly": "npm run build",
     "build": "yarn rollup --config ./rollup.config.js",
     "codegen:api:example-script": "node [codegen-config-file] [api-url] [destination-folder] [destination-file]"
   },
