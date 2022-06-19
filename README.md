@@ -28,11 +28,11 @@ yarn add axios effector
 import { createHttpApi, ContentType } from 'effector-http-api'
 import type { User, CreateUserDto, UpdateUserDto } from './models'
 
-const api = createHttpApi({ baseUrl: 'my-backend.com/api' });
+const http = createHttpApi({ baseUrl: 'my-backend.com/api' });
 
 // all routes url will be prefixed with '/users'
 // '/' => '/users/'
-const controller = api.createController('/users');
+const controller = http.createController('/users');
 
 const users = {
     // createRoute<Dto, Contract>() returns Effect<Dto, Contract>
@@ -74,9 +74,9 @@ const users = {
     })
 }
 
-const routes = { users }
+const api = { users }
 
-export { routes as api }
+export { api }
 
 ```
 

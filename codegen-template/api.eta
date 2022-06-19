@@ -34,9 +34,9 @@ const descriptionLines = _.compact([
 <% }) %>
 */
 <% } %>
-const api = createHttpApi({ baseURL: '<%~ server.url %>' })
+const http = createHttpApi({ baseURL: '<%~ server.url %>' })
 
-const routes = {
+const api = {
 
 <% routes.outOfModule && routes.outOfModule.forEach((route) => { %>
 
@@ -55,4 +55,4 @@ const routes = {
 <% }) %>
 }
 
-export { api, routes }
+export { http, api }
