@@ -14,10 +14,9 @@
   "author": "Nazarii Shvets",
   "license": "ISC",
   "dependencies": {
-    "-": "^0.0.1",
-    "D": "^1.0.0",
     "axios": "^0.27.2",
-    "deepmerge": "^4.2.2"
+    "deepmerge": "^4.2.2",
+    "effector": "^22.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
@@ -32,7 +31,6 @@
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",
     "babel-plugin-module-resolver": "^4.1.0",
-    "effector": "^22.3.0",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-boundaries": "^2.10.1",
