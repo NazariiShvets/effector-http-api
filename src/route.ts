@@ -9,15 +9,10 @@ import deepmerge from 'deepmerge';
 import type { Effect } from 'effector';
 import { attach, createEffect } from 'effector';
 
-import { createBatchedEffect, createMockEffect } from './lib';
+import { createBatchedEffect, createMockEffect } from './custom-effects';
+import { formatConfig, normalizeConfigHandler } from './lib';
 
-import type {
-  ApiUnits,
-  ControllerRouteOptions,
-  NormalizedRequestHandler,
-  RequestConfigHandler,
-  RouteOptions
-} from './types';
+import type { ApiUnits, RequestConfigHandler, RouteOptions } from './types';
 
 class EffectorApiRoute<
   Dto,
@@ -36,12 +31,12 @@ class EffectorApiRoute<
 
     options: Partial<RouteOptions<Dto, Contract>> = {}
   ) {
-    this.mergeOptions(options);
+    this.options = deepmerge(this.options, options);
 
     this.fx = this.createFx();
   }
 
-  private options: RouteOptions<Dto, Contract> = {
+  private readonly options: RouteOptions<Dto, Contract> = {
     disableAuth: false,
 
     batchConcurrentRequests: false,
@@ -62,79 +57,32 @@ class EffectorApiRoute<
     return attach({
       source: this.units,
       mapParams: (dto: Dto, units): AxiosRequestConfig => {
-        const config = this.normalizeConfigHandler(this.routeConfigHandler)(
-          dto
-        );
+        const config = normalizeConfigHandler(this.routeConfigHandler)(dto);
 
         config.headers = deepmerge(
           config.headers ?? {},
           units.customHeaders ?? {}
         );
 
-        this.attachPrefix(config);
+        config.url = `${this.prefix}${config.url}`;
 
         if (!this.options.disableAuth) {
-          this.attachAuth(config, units.authHeaders);
+          if (!units.authHeaders) {
+            //TODO: Add console.warn to prevent usage {auth:true} without headers
+          }
+
+          config.headers = deepmerge(
+            config.headers ?? {},
+            units.authHeaders ?? {}
+          );
         }
 
-        return this.formatConfig(config);
+        return formatConfig(config);
       },
       effect: createFx(async (params: AxiosRequestConfig) =>
         this.baseRequestFx(params).then(this.options.mapRawResponse)
       )
     }) as unknown as Effect<Dto, Contract>;
-  };
-
-  private readonly normalizeConfigHandler = (
-    config: RequestConfigHandler<Dto>
-  ): NormalizedRequestHandler<Dto> => {
-    if (typeof config === 'function') {
-      return dto => config(dto);
-    }
-
-    return dto => ({ ...config, data: dto });
-  };
-
-  private readonly mergeOptions = (
-    options: Partial<ControllerRouteOptions>
-  ) => {
-    this.options = deepmerge(this.options, options);
-  };
-
-  private readonly attachPrefix = (config: AxiosRequestConfig) => {
-    config.url = `${this.prefix}${config.url}`;
-  };
-
-  private readonly attachAuth = (
-    config: AxiosRequestConfig,
-    authHeaders: AxiosRequestConfig['headers']
-  ) => {
-    if (!authHeaders) {
-      //TODO: Add console.warn to prevent usage {auth:true} without headers
-    }
-    config.headers = deepmerge(config.headers ?? {}, authHeaders ?? {});
-  };
-
-  private readonly attachDataAsParams = (config: AxiosRequestConfig) => {
-    config.params = { ...(config.params ?? {}), ...config.data };
-  };
-
-  private readonly formatConfig = (config: AxiosRequestConfig) => {
-    if (!config.method) {
-      config.method = 'GET';
-    }
-
-    if (config.method.toUpperCase() === 'GET') {
-      if (!!config.data && typeof config.data === 'object') {
-        if (config.data && config.params) {
-          //TODO: add console.warn to prevent usage
-        }
-
-        this.attachDataAsParams(config);
-      }
-    }
-
-    return config;
   };
 }
 

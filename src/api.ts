@@ -13,7 +13,14 @@ import { createEffect, createStore, is } from 'effector';
 
 import { EffectorApiController } from './controller';
 
-import type { ApiUnits, ControllerRouteOptions } from './types';
+import { EffectorApiRoute } from './route';
+
+import type {
+  ApiUnits,
+  ControllerRouteOptions,
+  RequestConfigHandler,
+  RouteOptions
+} from './types';
 
 class EffectorApi {
   public constructor(
@@ -63,6 +70,23 @@ class EffectorApi {
       urlSuffix,
       deepmerge(this.routeOptions, routeOptions)
     );
+
+  public createRoute = <Dto = void, Contract = void>(
+    config: RequestConfigHandler<Dto>,
+    options: Partial<RouteOptions<Dto, Contract>> = {}
+  ) =>
+    new EffectorApiRoute<
+      Dto,
+      Contract,
+      AxiosRequestHeaders,
+      AxiosRequestHeaders
+    >(
+      this.baseRequestFx,
+      '',
+      this.units,
+      config,
+      deepmerge(this.routeOptions, options)
+    ).fx;
 }
 
 export { EffectorApi };

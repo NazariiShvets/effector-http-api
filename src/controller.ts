@@ -21,7 +21,6 @@ class EffectorApiController<
   AuthHeaders extends AxiosRequestHeaders,
   CustomHeaders extends AxiosRequestHeaders
 > {
-  // eslint-disable-next-line no-useless-constructor
   public constructor(
     private readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>,
 

@@ -49,10 +49,10 @@ type RouteOptions<Dto, Contract> = ControllerRouteOptions & {
 type RouteOptionsMockResponseHandler<Dto, Contract> = (dto: Dto) => Contract;
 
 type RequestConfigHandler<Dto> =
-  | AxiosRequestConfig<Dto>
+  | ApiRequestConfig<Dto>
   | NormalizedRequestHandler<Dto>;
 
-type NormalizedRequestHandler<Dto> = (dto: Dto) => AxiosRequestConfig;
+type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig;
 
 type ApiUnits<
   Auth extends AxiosRequestHeaders,
@@ -62,11 +62,23 @@ type ApiUnits<
   customHeaders: Store<Custom>;
 };
 
+enum ContentType {
+  Json = 'application/json',
+  FormData = 'multipart/form-data',
+  UrlEncoded = 'application/x-www-form-urlencoded'
+}
+
+type ApiRequestConfig<Data = any> = AxiosRequestConfig<Data> & {
+  type?: ContentType;
+};
+
+export { ContentType };
 export type {
   RouteOptions,
   RequestConfigHandler,
   ControllerRouteOptions,
   NormalizedRequestHandler,
   ApiUnits,
-  RouteOptionsMockResponseHandler
+  RouteOptionsMockResponseHandler,
+  ApiRequestConfig
 };

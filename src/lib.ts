@@ -1,0 +1,74 @@
+import type {
+  ApiRequestConfig,
+  NormalizedRequestHandler,
+  RequestConfigHandler
+} from './types';
+import { ContentType } from './types';
+
+import deepmerge from 'deepmerge';
+
+function formatToFormData(data: Record<string, unknown>): FormData {
+  return Object.keys(data || {}).reduce((formData, key) => {
+    const property = data[key];
+
+    const value =
+      property instanceof Blob
+        ? property
+        : formatNonBlobToFormDataProperty(property);
+
+    formData.append(key, value);
+
+    return formData;
+  }, new FormData());
+}
+
+function formatNonBlobToFormDataProperty(property: unknown) {
+  return typeof property === 'object' && property !== null
+    ? JSON.stringify(property)
+    : `${property}`;
+}
+
+function isNeedFormatToFormData(config: ApiRequestConfig) {
+  return (
+    config.method !== 'GET' &&
+    config.type === ContentType.FormData &&
+    !!config.data &&
+    typeof config.data === 'object'
+  );
+}
+
+function normalizeConfigHandler<Dto>(
+  config: RequestConfigHandler<Dto>
+): NormalizedRequestHandler<Dto> {
+  if (typeof config === 'function') {
+    return dto => config(dto);
+  }
+
+  return dto => ({ ...config, data: dto });
+}
+
+function formatConfig(config: ApiRequestConfig) {
+  if (!config.method) {
+    config.method = 'GET';
+  }
+
+  config.method = config.method.toUpperCase();
+
+  if (config.method === 'GET') {
+    if (!!config.data && typeof config.data === 'object') {
+      if (config.data && config.params) {
+        //TODO: add console.warn to prevent usage
+      }
+
+      config.params = deepmerge(config.params ?? {}, config.data);
+    }
+  }
+
+  if (isNeedFormatToFormData(config)) {
+    config.data = formatToFormData(config.data);
+  }
+
+  return config;
+}
+
+export { normalizeConfigHandler, formatConfig };
