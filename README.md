@@ -93,7 +93,7 @@ type Headers = {
 ### Usage
 ```typescript
 
-const api = createHttpApi({ 
+const http = createHttpApi({ 
     baseUrl: 'my-backend.com/api', 
     headers: {
         'X-CUSTOM-HEADER': "my-custom-header",
@@ -108,7 +108,7 @@ const $custom = $customHeader.map((customHeaderValue) => ({
     'X-CUSTOM-HEADER-2': customHeaderValue
 }))
 
-api.headers({
+http.headers({
     auth: $auth,
     custom: $custom
 })
@@ -125,9 +125,9 @@ All headers will send with request by default
 Route with `disableAuth: true` don't send `headers.auth` with request
 
 ```typescript
-const api = createHttpApi({ baseUrl: 'my-backend.com/api' }, { disableAuth: true });
+const http = createHttpApi({ baseUrl: 'my-backend.com/api' }, { disableAuth: true });
 
-const controller = api.createController('/users', { disableAuth: false });
+const controller = http.createController('/users', { disableAuth: false });
 
 const route = controller.createRoute<Dto,Contract>(config,{ disableAuth: true });
 ```
@@ -138,9 +138,9 @@ If route called multiple times while request is pending,
 calls will be batched with call which start a request
 
 ```typescript
-const api = createHttpApi({ baseUrl: 'my-backend.com/api' }, { batchConcurrentRequests: true });
+const http = createHttpApi({ baseUrl: 'my-backend.com/api' }, { batchConcurrentRequests: true });
 
-const controller = api.createController('/users', { batchConcurrentRequests: false });
+const controller = http.createController('/users', { batchConcurrentRequests: false });
 
 const route = controller.createRoute<Dto,Contract>(config,{ batchConcurrentRequests: true });
 ```
