@@ -6,8 +6,6 @@ import type {
 } from 'axios';
 import axios from 'axios';
 
-import deepmerge from 'deepmerge';
-
 import type { Effect } from 'effector';
 import { createEffect, createStore, is } from 'effector';
 
@@ -64,12 +62,10 @@ class EffectorApi {
     urlSuffix = '',
     routeOptions: ControllerRouteOptions = {}
   ) =>
-    new EffectorApiController(
-      this.baseRequestFx,
-      this.units,
-      urlSuffix,
-      deepmerge(this.routeOptions, routeOptions)
-    );
+    new EffectorApiController(this.baseRequestFx, this.units, urlSuffix, {
+      ...this.routeOptions,
+      ...routeOptions
+    });
 
   public createRoute = <Dto = void, Contract = void>(
     config: RequestConfigHandler<Dto>,
@@ -80,13 +76,10 @@ class EffectorApi {
       Contract,
       AxiosRequestHeaders,
       AxiosRequestHeaders
-    >(
-      this.baseRequestFx,
-      '',
-      this.units,
-      config,
-      deepmerge(this.routeOptions, options)
-    ).fx;
+    >(this.baseRequestFx, '', this.units, config, {
+      ...this.routeOptions,
+      ...options
+    }).fx;
 }
 
 export { EffectorApi };

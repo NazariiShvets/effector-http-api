@@ -10,7 +10,6 @@ import bundleSize from 'rollup-plugin-bundle-size'
 const external = [
   'effector',
   'axios',
-  'deepmerge'
 ];
 
 const plugins =  [
@@ -44,7 +43,7 @@ const plugins =  [
   nodeResolve({
     jsnext: true,
 
-    skip: ['effector', 'axios', 'deepmerge'],
+    skip: ['effector', 'axios'],
 
     extensions: ['.js', '.mjs']
   }),

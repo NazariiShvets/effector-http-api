@@ -4,8 +4,6 @@ import type {
   AxiosResponse
 } from 'axios';
 
-import deepmerge from 'deepmerge';
-
 import type { Effect } from 'effector';
 import { attach, createEffect } from 'effector';
 
@@ -31,7 +29,7 @@ class EffectorApiRoute<
 
     options: Partial<RouteOptions<Dto, Contract>> = {}
   ) {
-    this.options = deepmerge(this.options, options);
+    this.options = { ...this.options, ...options };
 
     this.fx = this.createFx();
   }
@@ -59,7 +57,7 @@ class EffectorApiRoute<
       mapParams: (dto: Dto, units): AxiosRequestConfig => {
         const config = normalizeConfigHandler(this.routeConfigHandler)(dto);
 
-        config.headers = deepmerge(config.headers ?? {}, units.auth ?? {});
+        config.headers = { ...(config.headers ?? {}), ...(units.custom ?? {}) };
 
         config.url = `${this.prefix}${config.url}`;
 
@@ -68,7 +66,7 @@ class EffectorApiRoute<
             //TODO: Add console.warn to prevent usage {auth:true} without headers
           }
 
-          config.headers = deepmerge(config.headers ?? {}, units.auth ?? {});
+          config.headers = { ...(config.headers ?? {}), ...(units.auth ?? {}) };
         }
 
         return formatConfig(config);

@@ -5,8 +5,6 @@ import type {
 } from './types';
 import { ContentType } from './types';
 
-import deepmerge from 'deepmerge';
-
 function formatToFormData(data: Record<string, unknown>): FormData {
   return Object.keys(data || {}).reduce((formData, key) => {
     const property = data[key];
@@ -60,7 +58,7 @@ function formatConfig(config: ApiRequestConfig) {
         //TODO: add console.warn to prevent usage
       }
 
-      config.params = deepmerge(config.params ?? {}, config.data);
+      config.params = { ...(config.params ?? {}), ...config.data };
     }
   }
 

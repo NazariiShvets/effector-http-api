@@ -4,8 +4,6 @@ import type {
   AxiosResponse
 } from 'axios';
 
-import deepmerge from 'deepmerge';
-
 import type { Effect } from 'effector';
 
 import { EffectorApiRoute } from './route';
@@ -28,7 +26,7 @@ class EffectorApiController<
 
     private readonly urlSuffix: string,
 
-    private readonly options: ControllerRouteOptions
+    private readonly options: ControllerRouteOptions = {}
   ) {}
 
   public createRoute = <Dto = void, Contract = void>(
@@ -40,7 +38,7 @@ class EffectorApiController<
       this.urlSuffix,
       this.units,
       config,
-      deepmerge(this.options, options)
+      { ...this.options, ...options }
     ).fx;
 }
 
