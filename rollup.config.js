@@ -4,7 +4,6 @@ import {terser} from 'rollup-plugin-terser'
 import {nodeResolve} from '@rollup/plugin-node-resolve'
 import jsonPlugin from '@rollup/plugin-json'
 import commonjs from '@rollup/plugin-commonjs'
-import copy from 'rollup-plugin-copy'
 import bundleSize from 'rollup-plugin-bundle-size'
 
 
@@ -57,10 +56,6 @@ const plugins =  [
   terser(),
 
   jsonPlugin(),
-
-  copy({
-    targets: [{ src: 'src/codegen-template', dest: '/' },]
-  }),
 
   bundleSize()
 ];
