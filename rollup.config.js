@@ -1,18 +1,20 @@
-import typescript from 'rollup-plugin-typescript2';
-import babel from 'rollup-plugin-babel';
-import { terser } from 'rollup-plugin-terser';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
+import typescript from 'rollup-plugin-typescript2'
+import babel from 'rollup-plugin-babel'
+import {terser} from 'rollup-plugin-terser'
+import {nodeResolve} from '@rollup/plugin-node-resolve'
+import jsonPlugin from '@rollup/plugin-json'
+import commonjs from '@rollup/plugin-commonjs'
+import copy from 'rollup-plugin-copy'
+import bundleSize from 'rollup-plugin-bundle-size'
+
 
 const external = [
-  'react',
-  'react-dom',
   'effector',
-  'effector-react',
-  'effector-react/scope'
+  'axios',
+  'deepmerge'
 ];
 
-const getPlugins = ({ reactSsr = false } = {}) => [
+const plugins =  [
   typescript({
     clean: true
   }),
@@ -27,7 +29,6 @@ const getPlugins = ({ reactSsr = false } = {}) => [
     presets: [
       '@babel/preset-env',
       '@babel/preset-typescript',
-      '@babel/preset-react'
     ],
 
     plugins: [
@@ -35,31 +36,16 @@ const getPlugins = ({ reactSsr = false } = {}) => [
       [
         'effector/babel-plugin',
         {
-          reactSsr: false,
           factories: ['src/index.ts']
         }
       ],
-
-      ...(reactSsr
-        ? [
-            [
-              'module-resolver',
-              {
-                root: ['./src'],
-                alias: {
-                  'effector-react': 'effector-react/scope'
-                }
-              }
-            ]
-          ]
-        : [])
     ]
   }),
 
   nodeResolve({
     jsnext: true,
 
-    skip: ['effector'],
+    skip: ['effector', 'axios', 'deepmerge'],
 
     extensions: ['.js', '.mjs']
   }),
@@ -68,11 +54,20 @@ const getPlugins = ({ reactSsr = false } = {}) => [
     extensions: ['.js', '.mjs']
   }),
 
-  terser()
+  terser(),
+
+  jsonPlugin(),
+
+  copy({
+    targets: [{ src: 'src/codegen-template', dest: 'dist' },]
+  }),
+
+  bundleSize()
 ];
 
 const output = {
-  file: './index.js',
+
+  file: './dist/index.js',
 
   format: 'cjs',
 
@@ -89,7 +84,7 @@ export default [
   {
     input: './src/index.ts',
 
-    plugins: getPlugins({ reactSsr: false }),
+    plugins,
 
     external,
 
