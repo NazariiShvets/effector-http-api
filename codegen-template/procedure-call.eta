@@ -65,7 +65,7 @@ const wrapperArgs = _
 const wrapperArgsType = isWrappedInDto ? wrapperArgs.slice(`dto: `.length) : isVoidRequest ? 'void' : rawWrapperArgs[0].type
 const wrapperArgsName = isWrappedInDto ? 'dto' : isVoidRequest ? '' : rawWrapperArgs[0].name
 
-const routePathWithParam = !isWrappedInDto ? path : pathParamsNames.reduce((resultPath, name) => path.replace('/${' + `${name}` + '}', '/${dto.' + `${name}` + '}'),path)
+const routePathWithParam = !isWrappedInDto ? path : pathParamsNames.reduce((resultPath, name) => resultPath.replace('/${' + `${name}` + '}', '/${dto.' + `${name}` + '}'),path)
 
 
 const isQueryProvidedForGetMethod = _.upperCase(method) === 'GET' && !!queryTmpl;
