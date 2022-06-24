@@ -22,10 +22,10 @@ import type {
 
 class EffectorApi {
   public constructor(
-    private readonly baseConfig: AxiosRequestConfig = {},
+    baseConfig: AxiosRequestConfig = {},
     private readonly routeOptions: ControllerRouteOptions = {}
   ) {
-    this.instance = axios.create(this.baseConfig);
+    this.instance = axios.create(baseConfig);
 
     this.baseRequestFx = createEffect(async (config: AxiosRequestConfig) =>
       this.instance.request(config)
@@ -37,7 +37,7 @@ class EffectorApi {
     custom: createStore({})
   };
 
-  private readonly instance: AxiosInstance;
+  public readonly instance: AxiosInstance;
 
   public readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>;
 
