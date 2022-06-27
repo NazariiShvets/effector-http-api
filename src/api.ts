@@ -7,7 +7,7 @@ import type {
 import axios from 'axios';
 
 import type { Effect } from 'effector';
-import { createEffect, createStore, is } from 'effector';
+import { createEffect, createStore, is, sample } from 'effector';
 
 import { EffectorApiController } from './controller';
 
@@ -50,11 +50,17 @@ class EffectorApi {
     const { custom, auth } = source;
 
     if (is.store(custom)) {
-      this.units.custom = custom;
+      sample({
+        source: custom,
+        target: this.units.custom
+      });
     }
 
     if (is.store(auth)) {
-      this.units.auth = auth;
+      sample({
+        source: auth,
+        target: this.units.auth
+      });
     }
   };
 
