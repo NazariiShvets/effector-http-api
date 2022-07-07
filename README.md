@@ -216,6 +216,25 @@ const getUserFx = controller.createRoute<User['id'], User>(config, {
 });
 ```
 
+
+#### forceTrimPayload:
+
+Trim payload provided to effect
+
+By design payload used as "data" if even `Dto` is `void`.
+This option can remove this behavior
+
+```typescript
+type RouteOptions<Dto, Contract> = {
+	forceTrimPayload?: boolean;
+}
+``` 
+
+```typescript
+const route = controller.createRoute<void, Contract>({ 
+  url:'/' 
+}, { forceTrimPayload: true });
+```
 ---
 # Generate api layer from swagger
 

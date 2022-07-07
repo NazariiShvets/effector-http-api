@@ -88,5 +88,6 @@ const isSkipHandler = isVoidRequest || (isSingleArg && (!!bodyTmpl || isQueryPro
         <%~ !isSkipHandler && bodyTmpl ?  `data: ${isWrappedInDto ? 'dto.' : '' } ${bodyTmpl},` : '' %>
         <%~ bodyContentKindTmpl && bodyContentKindTmpl !== requestContentKind.JSON ? `type: ${bodyContentKindTmpl},` : '' %>
         <%~ responseFormatTmpl ? `responseType: ${responseFormatTmpl},` : '' %>
-    })
-    ),
+    }),
+    <%~ wrapperArgsType === 'void' ? `{ forceTrimPayload: true }` : '' %>
+),

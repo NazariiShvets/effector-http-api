@@ -39,6 +39,8 @@ class EffectorApiRoute<
 
     batchConcurrentRequests: false,
 
+    forceTrimPayload: false,
+
     mapRawResponse: (data: AxiosResponse<Contract, Dto>) => data.data
   };
 
@@ -55,7 +57,10 @@ class EffectorApiRoute<
     return attach({
       source: this.units,
       mapParams: (dto: Dto, units): AxiosRequestConfig => {
-        const config = normalizeConfigHandler(this.routeConfigHandler)(dto);
+        const config = normalizeConfigHandler(
+          this.routeConfigHandler,
+          !!this.options.forceTrimPayload
+        )(dto);
 
         config.headers = { ...(config.headers ?? {}), ...(units.custom ?? {}) };
 

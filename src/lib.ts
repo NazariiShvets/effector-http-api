@@ -36,13 +36,14 @@ function isNeedFormatToFormData(config: ApiRequestConfig) {
 }
 
 function normalizeConfigHandler<Dto>(
-  config: RequestConfigHandler<Dto>
+  config: RequestConfigHandler<Dto>,
+  forceTrimPayload: boolean
 ): NormalizedRequestHandler<Dto> {
   if (typeof config === 'function') {
     return dto => config(dto);
   }
 
-  return dto => ({ ...config, data: dto });
+  return dto => (forceTrimPayload ? config : { ...config, data: dto });
 }
 
 function formatConfig(config: ApiRequestConfig) {

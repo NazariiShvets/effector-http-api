@@ -33,6 +33,14 @@ type RouteOptions<Dto, Contract> = ControllerRouteOptions & {
     raw: Response
   ) => Contract;
 
+  /**
+   * Trim payload provided to effect
+   *
+   * By design payload used as "data" if Dto=void
+   * This option can remove this behavior
+   */
+  forceTrimPayload?: boolean;
+
   mock?: {
     /**
      * Returns instead real call request
