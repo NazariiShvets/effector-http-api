@@ -257,9 +257,9 @@ Create a script file
 const { generateApi } = require('swagger-typescript-api');
 const path = require('path');
 
-const fileName = 'my-backend.ts';
+const fileName = 'api.gen.ts';
 const outputDir = path.resolve(process.cwd(),'./src/shared/api');
-const urlToSwaggerSchema = 'my-backend.com/swagger-api';
+const urlToSwaggerSchema = 'https://backend.com/swagger.json';
 
 const pathToTemplate = path.resolve(process.cwd(), 'node_modules', 'effector-http-api/codegen-template');
 
@@ -279,10 +279,20 @@ generateApi({
 
 ```
 
+Create a config file
+
+```typescript
+// {ROOT}/src/shared/api/config.ts
+
+const http = createHttpApi(axiosConfig);
+
+export { http }
+```
+
 Run this command to generate api layer
 
 ```shell
 node ./scripts/codegen.js
 ```
 
-Check generated file at `src/shared/api/my-backend.ts`
+Check generated file at `src/shared/api/api.gen.ts`

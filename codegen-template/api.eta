@@ -34,7 +34,6 @@ const descriptionLines = _.compact([
 <% }) %>
 */
 <% } %>
-const http = createHttpApi({ baseURL: '<%~ server.url %>' })
 
 const api = {
 
@@ -55,4 +54,4 @@ const api = {
 <% }) %>
 }
 
-export { http, api }
+export { api }
