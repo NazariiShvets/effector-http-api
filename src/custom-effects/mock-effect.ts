@@ -2,11 +2,16 @@ import type { Effect } from 'effector';
 import { createEffect } from 'effector';
 
 import type { RouteOptions, RouteOptionsMockResponseHandler } from '../types';
+import { createBatchedEffect } from './batched-effect';
 
 const createMockEffect = <Params, Done, Fail = Error>(
   options: Required<RouteOptions<Params, Done>>['mock']
-): Effect<Params, Done, Fail> =>
-  createEffect<Params, Done, Fail>(async params => {
+): Effect<Params, Done, Fail> => {
+  const createFx = options.batchConcurrentRequests
+    ? createBatchedEffect
+    : createEffect;
+
+  return createFx<Params, Done, Fail>(async params => {
     if (options.delay) {
       await delay(options.delay);
     }
@@ -15,6 +20,7 @@ const createMockEffect = <Params, Done, Fail = Error>(
       ? options.response(params)
       : options.response;
   });
+};
 
 async function delay(timeout: number) {
   await new Promise(r => setTimeout(r, timeout));

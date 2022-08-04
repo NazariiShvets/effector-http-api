@@ -51,6 +51,12 @@ type RouteOptions<Dto, Contract> = ControllerRouteOptions & {
      * Delay before return `mock.response`
      */
     delay?: number;
+
+    /**
+     * If route called multiple times while request is pending,
+     * calls will be batched with call which start a request
+     */
+    batchConcurrentRequests?: boolean;
   };
 };
 
@@ -60,7 +66,7 @@ type RequestConfigHandler<Dto> =
   | ApiRequestConfig<Dto>
   | NormalizedRequestHandler<Dto>;
 
-type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig;
+type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig<Dto>;
 
 type ApiUnits<
   Auth extends AxiosRequestHeaders,

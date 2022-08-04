@@ -295,15 +295,7 @@ module.exports = {
         allowSingleExtends: true,
       },
     ],
-
-    "@typescript-eslint/no-extraneous-class": [
-      "error",
-      {
-        allowConstructorOnly: true,
-        allowWithDecorator: true,
-      },
-    ],
-
+    
     "@typescript-eslint/member-ordering": [
       "error",
       {

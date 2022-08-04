@@ -26,18 +26,21 @@ function formatNonBlobToFormDataProperty(property: unknown) {
     : `${property}`;
 }
 
+function isObject(source: unknown): source is Record<string, unknown> {
+  return !!source && typeof source === 'object';
+}
+
 function isNeedFormatToFormData(config: ApiRequestConfig) {
   return (
     config.method !== 'GET' &&
-    config.type === ContentType.FormData &&
-    !!config.data &&
-    typeof config.data === 'object'
+    config.isForm === ContentType.FormData &&
+    isObject(config.data)
   );
 }
 
 function normalizeConfigHandler<Dto>(
   config: RequestConfigHandler<Dto>,
-  forceTrimPayload: boolean
+  forceTrimPayload = false
 ): NormalizedRequestHandler<Dto> {
   if (typeof config === 'function') {
     return dto => config(dto);
@@ -70,4 +73,10 @@ function formatConfig(config: ApiRequestConfig) {
   return config;
 }
 
-export { normalizeConfigHandler, formatConfig };
+export {
+  normalizeConfigHandler,
+  formatConfig,
+  isNeedFormatToFormData,
+  formatToFormData,
+  isObject
+};
