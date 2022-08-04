@@ -1,86 +1,96 @@
-import type {
-  AxiosRequestConfig,
-  AxiosRequestHeaders,
-  AxiosResponse
-} from 'axios';
-
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { Effect } from 'effector';
-import { attach, createEffect } from 'effector';
-
+import { createEffect } from 'effector';
 import { createBatchedEffect, createMockEffect } from './custom-effects';
-import { formatConfig, normalizeConfigHandler } from './lib';
+import { formatToFormData, isNeedFormatToFormData } from './lib/form-data';
+import type {
+  ApiRequestConfig,
+  MockOptions,
+  RequestConfigHandler,
+  RouteOptions
+} from './types';
 
-import type { ApiUnits, RequestConfigHandler, RouteOptions } from './types';
-
-class EffectorApiRoute<
-  Dto,
-  Contract,
-  AuthHeaders extends AxiosRequestHeaders,
-  CustomHeaders extends AxiosRequestHeaders
-> {
+class Route<Dto, Contract, Error = AxiosError<Dto, Contract>> {
   public constructor(
     private readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>,
+    private readonly routeFn: RequestConfigHandler<Dto>
+  ) {}
 
-    private readonly prefix: string,
+  private readonly _options: RouteOptions = {};
 
-    private readonly units: ApiUnits<AuthHeaders, CustomHeaders>,
+  private _mock: MockOptions<Dto, Contract> | undefined;
 
-    private readonly routeConfigHandler: RequestConfigHandler<Dto>,
+  private readonly getFx = () =>
+    this._options.batch
+      ? createBatchedEffect<Dto, Contract, Error>
+      : createEffect<Dto, Contract, Error>;
 
-    options: Partial<RouteOptions<Dto, Contract>> = {}
-  ) {
-    this.options = { ...this.options, ...options };
+  private readonly createRouteFx = (
+    fn: (dto: Dto) => AxiosRequestConfig<Dto>
+  ): Effect<Dto, Contract, Error> => {
+    const createRequestFx = this.getFx();
 
-    this.fx = this.createFx();
-  }
-
-  private readonly options: RouteOptions<Dto, Contract> = {
-    disableAuth: false,
-
-    batchConcurrentRequests: false,
-
-    forceTrimPayload: false,
-
-    mapRawResponse: (data: AxiosResponse<Contract, Dto>) => data.data
+    return createRequestFx(async (config: Dto) =>
+      this.baseRequestFx(fn(config)).then(response =>
+        this._options.rawResponse ? response : response.data
+      )
+    );
   };
 
-  public readonly fx: Effect<Dto, Contract>;
+  private readonly getConfig = (dto: Dto) =>
+    typeof this.routeFn === 'function' ? this.routeFn(dto) : this.routeFn;
 
-  private readonly createFx = () => {
-    if (this.options.mock)
-      return createMockEffect<Dto, Contract>(this.options.mock);
+  private readonly ensureMethod = (config: AxiosRequestConfig<Dto>) => {
+    if (!config.method) {
+      config.method = 'GET';
+    }
 
-    const createFx = this.options.batchConcurrentRequests
-      ? createBatchedEffect
-      : createEffect;
+    config.method = config.method.toUpperCase();
 
-    return attach({
-      source: this.units,
-      mapParams: (dto: Dto, units): AxiosRequestConfig => {
-        const config = normalizeConfigHandler(
-          this.routeConfigHandler,
-          !!this.options.forceTrimPayload
-        )(dto);
+    return config;
+  };
 
-        config.headers = { ...(config.headers ?? {}), ...(units.custom ?? {}) };
-
-        config.url = `${this.prefix}${config.url}`;
-
-        if (!this.options.disableAuth) {
-          if (!units.auth) {
-            //TODO: Add console.warn to prevent usage {auth:true} without headers
-          }
-
-          config.headers = { ...(config.headers ?? {}), ...(units.auth ?? {}) };
+  private readonly formatConfig = (config: AxiosRequestConfig<Dto>) => {
+    if (config.method === 'GET') {
+      if (!!config.data && typeof config.data === 'object') {
+        if (config.data && config.params) {
+          //TODO: add console.warn to prevent usage
         }
 
-        return formatConfig(config);
-      },
-      effect: createFx(async (params: AxiosRequestConfig) =>
-        this.baseRequestFx(params).then(this.options.mapRawResponse)
-      )
-    }) as unknown as Effect<Dto, Contract>;
+        config.params = { ...(config.params ?? {}), ...config.data };
+      }
+    }
+
+    if (isNeedFormatToFormData(config)) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      config.data = formatToFormData(config.data);
+    }
+  };
+
+  public options = (config: RouteOptions) => {
+    Object.assign(this._options, config);
+  };
+
+  public mock = (config: MockOptions<Dto, Contract>) => {
+    this._mock = config;
+  };
+
+  public build = () => {
+    if (this._mock) {
+      return createMockEffect(this._mock);
+    }
+
+    return this.createRouteFx((dto: Dto): ApiRequestConfig<Dto> => {
+      const config = this.getConfig(dto);
+
+      this.ensureMethod(config);
+
+      this.formatConfig(config);
+
+      return config;
+    });
   };
 }
 
-export { EffectorApiRoute };
+export { Route };

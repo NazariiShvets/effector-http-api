@@ -1,13 +1,6 @@
-import type { AxiosRequestConfig } from 'axios';
+import { Http } from './http';
 
-import { EffectorApi } from './api';
+const createHttp = (...args: ConstructorParameters<typeof Http>) =>
+  new Http(...args);
 
-import type { ControllerRouteOptions } from './types';
-
-const createHttpApi = (
-  baseConfig: AxiosRequestConfig = {},
-  routeOptions: ControllerRouteOptions = {}
-) => new EffectorApi(baseConfig, routeOptions);
-
-export { createHttpApi };
-export { ContentType } from './types';
+export { createHttp };

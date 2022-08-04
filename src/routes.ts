@@ -1,4 +1,4 @@
-import type { Effect } from 'effector/effector.cjs';
+import type { Effect } from 'effector';
 import type { AxiosError } from 'axios';
 import type { MockOptions, RouteOptions } from './types';
 import { Route } from './route';

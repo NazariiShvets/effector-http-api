@@ -4,8 +4,8 @@ import type {
   AxiosRequestHeaders,
   AxiosResponse
 } from 'axios';
-import type { Effect, Unit } from 'effector/effector.cjs';
-import { attach, createStore, sample } from 'effector/effector.cjs';
+import type { Effect, Unit } from 'effector';
+import { attach, createStore, sample } from 'effector';
 import type { RequestConfigHandler } from './types';
 import type { ShapeConfig } from './lib/typescript';
 import { Route } from './route';
