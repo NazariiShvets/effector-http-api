@@ -1,2 +1,1 @@
-import { ContentType } from 'effector-http-api';
-import { http } from './config'
+import { config } from './config'

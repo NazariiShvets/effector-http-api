@@ -1,5 +1,5 @@
 <%
-const { apiConfig, routes, utils, config } = it;
+const { apiConfig, routes:apiRoutes, utils, config } = it;
 const { info, servers, externalDocs } = apiConfig;
 const { _, require, formatDescription } = utils;
 
@@ -35,23 +35,23 @@ const descriptionLines = _.compact([
 */
 <% } %>
 
-const api = {
+const routes = config.createRoutesConfig({
 
-<% routes.outOfModule && routes.outOfModule.forEach((route) => { %>
+<% apiRoutes.outOfModule && apiRoutes.outOfModule.forEach((route) => { %>
 
         <%~ includeFile('./procedure-call.eta', { ...it, route }) %>
 
 <% }) %>
 
-<% routes.combined && routes.combined.forEach(({ routes = [], moduleName }) => { %>
+<% apiRoutes.combined && apiRoutes.combined.forEach(({ routes:apiRoutes = [], moduleName }) => { %>
     <%~ moduleName %> : {
-    <% routes.forEach((route) => { %>
+    <% apiRoutes.forEach((route) => { %>
 
         <%~ includeFile('./procedure-call.eta', { ...it, route }) %>
 
     <% }) %>
     },
 <% }) %>
-}
+})
 
-export { api }
+export { routes }
