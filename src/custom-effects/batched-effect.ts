@@ -1,6 +1,10 @@
 import type { Effect } from 'effector';
 import { createEffect } from 'effector';
 
+type BatchedEffect<Params, Done, Fail> = Effect<Params, Done, Fail> & {
+  __isBatchedEffect: true;
+};
+
 /**
  * First effect call await publish handler result
  *
@@ -8,12 +12,12 @@ import { createEffect } from 'effector';
  */
 const createBatchedEffect = <Params, Done, Fail = Error>(
   handler: (params: Params) => Promise<Done>
-): Effect<Params, Done, Fail> => {
+): BatchedEffect<Params, Done, Fail> => {
   let inFlight = false;
 
   const pubSub = new PubSub<Done, Fail>();
 
-  return createEffect<Params, Done, Fail>(async params => {
+  const batchedFx = createEffect<Params, Done, Fail>(async params => {
     if (!inFlight) {
       inFlight = true;
 
@@ -33,8 +37,17 @@ const createBatchedEffect = <Params, Done, Fail = Error>(
     }
 
     return new Promise<Done>(pubSub.subscribe);
-  });
+  }) as BatchedEffect<Params, Done, Fail>;
+
+  batchedFx.__isBatchedEffect = true;
+
+  return batchedFx;
 };
+
+const isBatchedEffect = <Params, Done, Error>(
+  effect: Effect<Params, Done, Error>
+): effect is BatchedEffect<Params, Done, Error> =>
+  !!(effect as BatchedEffect<Params, Done, Error>).__isBatchedEffect;
 
 class PubSub<Resolve, Reject> {
   private subscribers: {
@@ -76,4 +89,4 @@ class PubSub<Resolve, Reject> {
   };
 }
 
-export { createBatchedEffect };
+export { createBatchedEffect, isBatchedEffect };

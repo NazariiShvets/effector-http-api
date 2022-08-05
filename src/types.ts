@@ -29,7 +29,7 @@ type RequestConfigHandler<Dto> =
   | ApiRequestConfig<Dto>
   | NormalizedRequestHandler<Dto>;
 
-type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig<Dto>;
+type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig<any>;
 
 type ApiRequestConfig<Data> = AxiosRequestConfig<Data> & {
   formData?: true;

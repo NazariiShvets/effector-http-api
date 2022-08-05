@@ -2,17 +2,17 @@ import type { MockOptions, RouteFx, RouteOptions } from './types';
 import { Route } from './route';
 import type { ShapeConfig } from './lib/typescript';
 
-type RouteMocksConfig<Shape> = {
+type RouteMocksConfig<Shape> = Partial<{
   [Key in keyof Shape]: Shape[Key] extends Route<infer D, infer C>
     ? MockOptions<D, C>
     : RouteMocksConfig<Shape[Key]>;
-};
+}>;
 
-type RouteOptionsConfig<Shape> = {
+type RouteOptionsConfig<Shape> = Partial<{
   [Key in keyof Shape]: Shape[Key] extends Route<any, any>
     ? RouteOptions
     : RouteOptionsConfig<Shape[Key]>;
-};
+}>;
 
 type MockOptionsFromRoute<TRoute> = TRoute extends Route<infer D, infer C>
   ? MockOptions<D, C>
@@ -70,7 +70,7 @@ class Routes<
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      map[key] = traverse(
+      map[key] = this.traverse(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
         base[key],
@@ -87,10 +87,14 @@ class Routes<
 
   public mocks = (mocks: MockShape) => {
     this._mocks = mocks;
+
+    return this;
   };
 
   public options = (options: OptionsShape) => {
     this._options = options;
+
+    return this;
   };
 
   public build = () => {

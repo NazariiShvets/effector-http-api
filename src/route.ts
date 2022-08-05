@@ -46,7 +46,9 @@ class Route<Dto, Contract> {
   };
 
   private readonly getConfig = (dto: Dto) =>
-    typeof this.routeFn === 'function' ? this.routeFn(dto) : this.routeFn;
+    typeof this.routeFn === 'function'
+      ? this.routeFn(dto)
+      : { ...this.routeFn, data: dto };
 
   private readonly ensureMethod = (config: AxiosRequestConfig<Dto>) => {
     if (!config.method) {
@@ -58,7 +60,7 @@ class Route<Dto, Contract> {
     return config;
   };
 
-  private readonly formatConfig = (config: AxiosRequestConfig<Dto>) => {
+  private readonly formatConfig = (config: ApiRequestConfig<Dto>) => {
     if (config.method === 'GET') {
       if (!!config.data && typeof config.data === 'object') {
         if (config.data && config.params) {
@@ -66,6 +68,8 @@ class Route<Dto, Contract> {
         }
 
         config.params = { ...(config.params ?? {}), ...config.data };
+
+        delete config.data;
       }
     }
 
@@ -73,6 +77,10 @@ class Route<Dto, Contract> {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       config.data = formatToFormData(config.data);
+    }
+
+    if (config.formData) {
+      delete config.formData;
     }
   };
 
@@ -86,14 +94,15 @@ class Route<Dto, Contract> {
 
   public build = () => {
     if (this._mock) {
-      const rawFx = createMockEffect<
-        Dto,
-        AxiosResponse<Contract, Dto>,
-        AxiosError<Contract, Dto>
-      >(this._mock);
+      const rawFx = createMockEffect<Dto, Contract, AxiosError<Contract, Dto>>(
+        this._mock
+      );
 
-      const resultFx = createMockEffect(this._mock) as RouteFx<Dto, Contract>;
-      resultFx.rawResponseFx = rawFx;
+      const resultFx = rawFx as unknown as RouteFx<Dto, Contract>;
+      resultFx.rawResponseFx = rawFx as unknown as RouteFx<
+        Dto,
+        Contract
+      >['rawResponseFx'];
 
       return resultFx;
     }
@@ -114,7 +123,11 @@ class Route<Dto, Contract> {
   public buildRouteFx = (
     rawFx: Effect<Dto, AxiosResponse<Contract, Dto>, AxiosError<Contract, Dto>>
   ): RouteFx<Dto, Contract> => {
-    const mappedFx = createEffect<Dto, Contract, AxiosError<Contract, Dto>>(
+    const createFx = this._options.batch
+      ? createBatchedEffect<Dto, Contract, AxiosError<Contract, Dto>>
+      : createEffect;
+
+    const mappedFx = createFx<Dto, Contract, AxiosError<Contract, Dto>>(
       async dto => rawFx(dto).then(response => response.data)
     );
 

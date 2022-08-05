@@ -37,6 +37,8 @@ class Http {
       clock: $headers,
       target: this.$headers
     });
+
+    return this;
   };
 
   public createRoute = <Dto = void, Contract = void>(
