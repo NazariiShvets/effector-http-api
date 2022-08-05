@@ -1,4 +1,4 @@
-import { createMockEffect } from '../../custom-effects';
+import { createMockEffect } from '../../src/custom-effects';
 import { faker } from '@faker-js/faker';
 import { allSettled, fork } from 'effector';
 

@@ -1,4 +1,4 @@
-import { formatToFormData } from '../../lib/form-data';
+import { formatToFormData } from '../../src/lib/form-data';
 
 describe('formatToFormData', () => {
   it('should transform to JSON objects', () => {

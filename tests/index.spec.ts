@@ -2,10 +2,10 @@ import type { AxiosInstance, AxiosRequestHeaders } from 'axios';
 import { allSettled, createEvent, fork } from 'effector';
 import { faker } from '@faker-js/faker';
 
-import { createHttp } from '../index';
-import type { Http } from '../http';
-import { isBatchedEffect } from '../custom-effects/batched-effect';
-import { isMockEffect } from '../custom-effects/mock-effect';
+import { createHttp } from '../src';
+import type { Http } from '../src/http';
+import { isBatchedEffect } from '../src/custom-effects/batched-effect';
+import { isMockEffect } from '../src/custom-effects/mock-effect';
 
 describe('effector-http-api', () => {
   let instance: jest.Mock;

@@ -1,4 +1,4 @@
-import { createBatchedEffect } from '../../custom-effects';
+import { createBatchedEffect } from '../../src/custom-effects';
 import { allSettled, createEvent, fork, sample } from 'effector';
 import { faker } from '@faker-js/faker';
 
