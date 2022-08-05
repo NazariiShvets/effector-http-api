@@ -1,6 +1,4 @@
-import type { Effect } from 'effector';
-import type { AxiosError } from 'axios';
-import type { MockOptions, RouteOptions } from './types';
+import type { MockOptions, RouteFx, RouteOptions } from './types';
 import { Route } from './route';
 import type { ShapeConfig } from './lib/typescript';
 
@@ -31,6 +29,62 @@ class Routes<
 
   private _options: OptionsShape | undefined;
 
+  private readonly isMock = <V extends Route<any, any>>(
+    value: V,
+    mock?: unknown
+  ): mock is MockOptionsFromRoute<V> => !!mock;
+
+  private readonly traverse = <
+    S extends Shape,
+    M extends MockShape,
+    O extends OptionsShape
+  >(
+    base: S,
+    mocks: M,
+    options: O
+  ) =>
+    Object.entries(base).reduce((map, [key, value]) => {
+      if (value instanceof Route) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const mock = mocks?.[key];
+
+        if (this.isMock(value, mock)) {
+          value.mock(mock);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const routeOptions = options?.[key];
+
+        if (routeOptions) {
+          value.options(routeOptions);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        map[key] = value.build();
+
+        return map;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      map[key] = traverse(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        base[key],
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        mocks?.[key] ?? {},
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        options?.[key] ?? {}
+      );
+
+      return map;
+    }, {});
+
   public mocks = (mocks: MockShape) => {
     this._mocks = mocks;
   };
@@ -45,66 +99,11 @@ class Routes<
         infer Dto,
         infer Contract
       >
-        ? Effect<Dto, Contract, AxiosError<Contract, Dto>>
+        ? RouteFx<Dto, Contract>
         : GetRoutesShape<RShape[Key]>;
     };
 
-    function isMock<V extends Route<any, any>>(
-      value: V,
-      mock?: unknown
-    ): mock is MockOptionsFromRoute<V> {
-      return !!mock;
-    }
-
-    function traverse<
-      S extends Shape,
-      M extends MockShape,
-      O extends OptionsShape
-    >(base: S, mocks: M, options: O) {
-      return Object.entries(base).reduce((map, [key, value]) => {
-        if (value instanceof Route) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          const mock = mocks?.[key];
-
-          if (isMock(value, mock)) {
-            value.mock(mock);
-          }
-
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          const routeOptions = options?.[key];
-
-          if (routeOptions) {
-            value.options(routeOptions);
-          }
-
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          map[key] = value.build();
-
-          return map;
-        }
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        map[key] = traverse(
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          base[key],
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          mocks?.[key] ?? {},
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          options?.[key] ?? {}
-        );
-
-        return map;
-      }, {});
-    }
-
-    return traverse(
+    return this.traverse(
       this.routes,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error

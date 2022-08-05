@@ -1,8 +1,20 @@
-import type { AxiosRequestConfig } from 'axios';
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { Effect } from 'effector';
+
+type RouteFx<Dto, Contract> = Effect<
+  Dto,
+  Contract,
+  AxiosError<Contract, Dto>
+> & {
+  rawResponseFx: Effect<
+    Dto,
+    AxiosResponse<Contract, Dto>,
+    AxiosError<Contract, Dto>
+  >;
+};
 
 type RouteOptions = {
   batch?: true;
-  rawResponse?: true;
 };
 
 type MockOptions<Dto, Contract> = {
@@ -24,6 +36,7 @@ type ApiRequestConfig<Data> = AxiosRequestConfig<Data> & {
 };
 
 export type {
+  RouteFx,
   RouteOptions,
   RouteOptionsMockResponseHandler,
   ApiRequestConfig,

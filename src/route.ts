@@ -1,4 +1,5 @@
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
 import type { Effect } from 'effector';
 import { createEffect } from 'effector';
 import { createBatchedEffect, createMockEffect } from './custom-effects';
@@ -7,10 +8,11 @@ import type {
   ApiRequestConfig,
   MockOptions,
   RequestConfigHandler,
+  RouteFx,
   RouteOptions
 } from './types';
 
-class Route<Dto, Contract, Error = AxiosError<Dto, Contract>> {
+class Route<Dto, Contract> {
   public constructor(
     private readonly baseRequestFx: Effect<AxiosRequestConfig, AxiosResponse>,
     private readonly routeFn: RequestConfigHandler<Dto>
@@ -22,18 +24,24 @@ class Route<Dto, Contract, Error = AxiosError<Dto, Contract>> {
 
   private readonly getFx = () =>
     this._options.batch
-      ? createBatchedEffect<Dto, Contract, Error>
-      : createEffect<Dto, Contract, Error>;
+      ? createBatchedEffect<
+          Dto,
+          AxiosResponse<Contract, Dto>,
+          AxiosError<Contract, Dto>
+        >
+      : createEffect<
+          Dto,
+          AxiosResponse<Contract, Dto>,
+          AxiosError<Contract, Dto>
+        >;
 
   private readonly createRouteFx = (
     fn: (dto: Dto) => AxiosRequestConfig<Dto>
-  ): Effect<Dto, Contract, Error> => {
+  ): Effect<Dto, AxiosResponse<Contract, Dto>, AxiosError<Contract, Dto>> => {
     const createRequestFx = this.getFx();
 
     return createRequestFx(async (config: Dto) =>
-      this.baseRequestFx(fn(config)).then(response =>
-        this._options.rawResponse ? response : response.data
-      )
+      this.baseRequestFx(fn(config))
     );
   };
 
@@ -78,18 +86,42 @@ class Route<Dto, Contract, Error = AxiosError<Dto, Contract>> {
 
   public build = () => {
     if (this._mock) {
-      return createMockEffect(this._mock);
+      const rawFx = createMockEffect<
+        Dto,
+        AxiosResponse<Contract, Dto>,
+        AxiosError<Contract, Dto>
+      >(this._mock);
+
+      const resultFx = createMockEffect(this._mock) as RouteFx<Dto, Contract>;
+      resultFx.rawResponseFx = rawFx;
+
+      return resultFx;
     }
 
-    return this.createRouteFx((dto: Dto): ApiRequestConfig<Dto> => {
-      const config = this.getConfig(dto);
+    return this.buildRouteFx(
+      this.createRouteFx((dto: Dto): ApiRequestConfig<Dto> => {
+        const config = this.getConfig(dto);
 
-      this.ensureMethod(config);
+        this.ensureMethod(config);
 
-      this.formatConfig(config);
+        this.formatConfig(config);
 
-      return config;
-    });
+        return config;
+      })
+    );
+  };
+
+  public buildRouteFx = (
+    rawFx: Effect<Dto, AxiosResponse<Contract, Dto>, AxiosError<Contract, Dto>>
+  ): RouteFx<Dto, Contract> => {
+    const mappedFx = createEffect<Dto, Contract, AxiosError<Contract, Dto>>(
+      async dto => rawFx(dto).then(response => response.data)
+    );
+
+    const resultFx = mappedFx as RouteFx<Dto, Contract>;
+    resultFx.rawResponseFx = rawFx;
+
+    return resultFx;
   };
 }
 
