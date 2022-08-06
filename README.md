@@ -7,6 +7,7 @@ Dependencies
 ```shell
 npm i effector-http-api
 ```
+
 or is you use yarn
 
 ```shell
@@ -19,280 +20,242 @@ Also install peer-dependencies
 yarn add axios effector
 ```
 
-
 ---
+
 # Usage
 
 ```typescript
 // src/shared/api/my-backend.ts`
-import { createHttpApi, ContentType } from 'effector-http-api'
-import type { User, CreateUserDto, UpdateUserDto } from './models'
+import {createHttp} from 'effector-http-api'
+import type {User, CreateUserDto, UpdateUserDto} from './models'
 
-const http = createHttpApi({ baseUrl: 'my-backend.com/api' });
+const instance = axios.create()
+const http = createHttp(instance);
 
-// all routes url will be prefixed with '/users'
-// '/' => '/users/'
-const controller = http.createController('/users');
+const routesConfig = http.createRoutesConfig({
+ // createRoute<Dto, Contract>() returns Effect<Dto, Contract>
+ getAll: http.createRoute<void, User[]>({
+  url: '/',
+  // "GET" method is set by default, no need to add this line
+  method: 'GET'
+ }),
 
-const users = {
-    // createRoute<Dto, Contract>() returns Effect<Dto, Contract>
-    getAll: controller.createRoute<void, User[]>({
-        url:'/',
-        // "GET" method is set by default, no need to add this line
-        method:'GET'
-    }),
-    
-    // dto provided to route pass to AxiosRequestConfig['data']
-    create: controller.createRoute<CreateUserDto,User>({
-        url: '/',
-        method: 'POST'
-    }),
+ // dto provided to route pass to AxiosRequestConfig['data']
+ create: http.createRoute<CreateUserDto, User>({
+  url: '/',
+  method: 'POST'
+ }),
 
-    // In 'GET' request `dto` will be passed to url as query
-    getFiltered: controller.createRoute<FiltersDto, User[]>({
-        url:'/',
-    }),
-    
-    // If you need to customize behavior of dto — use callback instead of config
-    update: controller.creteRoute<{id: User['id'], data: UpdateUserDto}, User>(({id, data}) => ({
-        url: `/${id}`,
-        method: 'PUT',
-        data
-    })),
+ // In 'GET' request `dto` will be passed to url as query
+ getFiltered: http.createRoute<FiltersDto, User[]>({
+  url: '/',
+ }),
 
-    get: controller.createRoute<User['id'], User>((id) => ({
-        url: `/${id}`,
-    })),
+ // If you need to customize behavior of dto — use callback instead of config
+ update: http.creteRoute<{ id: User['id'], data: UpdateUserDto }, User>(({id, data}) => ({
+  url: `/${id}`,
+  method: 'PUT',
+  data
+ })),
+
+ get: http.createRoute<User['id'], User>((id) => ({
+  url: `/${id}`,
+ })),
 
 
-    // If you dont need controller you can create route from `api` instance
-    createByUpload: http.createRoute<{ file: File }>({
-        url: '/upload/users',
-        method: 'POST',
-        // dto provided with this type converts to FormData under the hood
-        type: ContentType.FormData
-    })
-}
+ createByUpload: http.createRoute<{ file: File }>({
+  url: '/upload/users',
+  method: 'POST',
+  // dto provided with this flag converts to FormData under the hood
+  formData: true
+ })
+});
 
-const api = { users }
+const api = routesConfig.build();
 
 export { api }
 
 ```
 
 ---
-## Headers | Auth
 
-```typescript
-type Headers = {
-    auth: Store<AxiosRequestHeaders>;
-    custom: Store<AxiosRequestHeaders>
-}
-```
+## Headers
+
+To attach headers to requests, call `http.headers(unit)`, and pass as payload `Unit<AxiosRequestHeaders>`
 
 ### Usage
+
 ```typescript
+import {createEvent, createStore} from "effector";
+import {AxiosRequestHeaders} from "axios";
 
-const http = createHttpApi({ 
-    baseUrl: 'my-backend.com/api', 
-    headers: {
-        'X-CUSTOM-HEADER': "my-custom-header",
-    } 
-});
 
-const $auth = $accessToken.map((token) => ({
-    Authorization: `Bearer ${token}`
-}))
+const headersChanged = createEvent<AxiosRequestHeaders>()
+createHttp(instance).headers(headersChanged);
 
-const $custom = $customHeader.map((customHeaderValue) => ({
-    'X-CUSTOM-HEADER-2': customHeaderValue
-}))
-
-http.headers({
-    auth: $auth,
-    custom: $custom
-})
+// or
+const $headers = createStore<AxiosRequestHeaders>({})
+createHttp(instance).headers($headers);
 ```
+
 ---
+
 ## Options
-### Global Options
-Options provided from higher level can be overridden by lower level (api => controller => route)
 
+To add custom option to route use `http.createRoutesConfig.options(options)`
 
-#### disableAuth: boolean
-All headers will send with request by default
+### batch: boolean
 
-Route with `disableAuth: true` don't send `headers.auth` with request
-
-```typescript
-const http = createHttpApi({ baseUrl: 'my-backend.com/api' }, { disableAuth: true });
-
-const controller = http.createController('/users', { disableAuth: false });
-
-const route = controller.createRoute<Dto,Contract>(config,{ disableAuth: true });
-```
-
----
-#### batchConcurrentRequests: boolean
 If route called multiple times while request is pending,
 calls will be batched with call which start a request
 
 ```typescript
-const http = createHttpApi({ baseUrl: 'my-backend.com/api' }, { batchConcurrentRequests: true });
+const http = createHttp(instance);
 
-const controller = http.createController('/users', { batchConcurrentRequests: false });
-
-const route = controller.createRoute<Dto,Contract>(config,{ batchConcurrentRequests: true });
-```
-
-### Route-only Options
-
-#### mapRawResponse:
-
-Custom resolver for mapping response
-
-By default `createRoute` has `(response) => response.data` mapper
-
-```typescript
-type RouteOptions = {
-    mapRawResponse?: <Response extends AxiosResponse<any, Dto>>(raw: Response) => Contract;
-}
-``` 
-
-Use-case: POST request, `Dto` has `{id: string}`, backend returns void. You can manually map response yourself:
-
-`mapRawResponse: (response) => response.request.data.id`
-
-@note: `response.request.data` in `AxiosResponse` is non required field in typing. This case you need fix yourself
-
-```typescript
-const route = controller.createRoute<Dto, Dto['id']>(config, {
-    mapRawResponse: (response) => response.request.data.id
+const routesConfig = http.createRoutesConfig({
+ route: http.createRoute({ url: '/' })
 });
+
+routesConfig.options({
+ route: {
+  batch: true
+ }
+});
+
+const api = routesConfig.build();
 ```
 
-
-
-#### mock:
+## Mock:
 
 Configuration for return mock response instead calling request
 
 ```typescript
-type RouteOptions<Dto, Contract> = {
-    mock?: {
-        /**
-         * Returns instead real call request
-         */
-        response: Contract | RouteOptionsMockResponseHandler<Dto, Contract>;
-
-        /**
-         * Delay before return `mock.response`
-         */
-        delay?: number;
-    };
-}
-``` 
-
-```typescript
-const mockedUsers = [
-    { id: 1, name: 'Mocked User 1' },
-    { id: 2, name: 'Mocked User 2' }
+const mockedUsers: User[] = [
+ {id: 1, name: 'Mocked User 1'},
+ {id: 2, name: 'Mocked User 2'}
 ]
 
+const http = createHttp(instance);
 
-const getUsersFx = controller.createRoute<void, User[]>(config, {
-    mock: {
-        response: mockedUsers,
-        delay: 1500
-    }
+const routesConfig = http.createRoutesConfig({
+ getUsers: http.createRoute<void, User[]>({ url: '/' }),
+ getUser: http.createRoute<User['id'], User>({ url: '/' }),
 });
 
-
-const getUserFx = controller.createRoute<User['id'], User>(config, {
-    mock: {
-        response: (id) => mockedUsers.find(user => user.id === id),
-        delay: 1500
-    }
+routesConfig.mock({
+ getUsers: {
+   /**
+   * Same as `options.batch`.
+   * Usefull, then mock responseFn has timeouts or `mock.delay`
+   */
+  batch: true,
+	 
+  delay: 1500,
+  response: mockedUsers
+ },
+ getUser: {
+  delay: 1000,
+  response: (id) => mockedUsers.find(user => user.id === id)
+ }
 });
+
+const api = routesConfig.build();
 ```
 
-
-#### forceTrimPayload:
-
-Trim payload provided to effect
-
-By design payload used as "data" if even `Dto` is `void`.
-This option can remove this behavior
-
-```typescript
-type RouteOptions<Dto, Contract> = {
-	forceTrimPayload?: boolean;
-}
-``` 
-
-```typescript
-const route = controller.createRoute<void, Contract>({ 
-  url:'/' 
-}, { forceTrimPayload: true });
-```
 ---
+## RawResponseFx
+
+By default all routes map responses
+
+```typescript
+(response: AxiosResponse) => response.data
+```
+
+Raw version of route, without mapper, accessible by prop on route
+
+```typescript
+const http = createHttp(instance);
+
+const routesConfig = http.createRoutesConfig({
+  getData: http.createRoute({ url:'/' }) 
+});
+
+const api = routesConfig.build();
+
+api.getData // with mappings
+api.getData.rawResponseFx // without mappings
+```
+
+---
+
 # Generate api layer from swagger
 
-Install codegen module
+1. Install codegen module
 
 ```shell
 npm i swagger-typescript-api -D
 ```
+
 or is you use yarn
 
 ```shell
 yarn add swagger-typescript-api -D
 ```
 
-Create a script file
+2. Create a script file
 
 ```javascript
 // {ROOT}/scripts/codegen.js
 
-const { generateApi } = require('swagger-typescript-api');
+const {generateApi} = require('swagger-typescript-api');
 const path = require('path');
 
 const fileName = 'api.gen.ts';
-const outputDir = path.resolve(process.cwd(),'./src/shared/api');
+const outputDir = path.resolve(process.cwd(), './src/shared/api');
 const urlToSwaggerSchema = 'https://backend.com/swagger.json';
 
 const pathToTemplate = path.resolve(process.cwd(), 'node_modules', 'effector-http-api/codegen-template');
 
 generateApi({
-    name: fileName,
-    
-    output: outputDir,
-    
-    url: urlToSwaggerSchema,
-    
-    httpClientType: 'axios',
-    
-    generateClient: true,
-    
-    templates: pathToTemplate,
+ name: fileName,
+
+ output: outputDir,
+
+ url: urlToSwaggerSchema,
+
+ httpClientType: 'axios',
+
+ generateClient: true,
+
+ templates: pathToTemplate,
 });
 
 ```
 
-Create a config file
+3. Create a config file
 
 ```typescript
 // {ROOT}/src/shared/api/config.ts
 
-const http = createHttpApi(axiosConfig);
+import axios from "axios";
+import { createHttp } from 'effector-http-api'
+
+const instance = axios.create();
+
+const http = createHttp(instance);
 
 export { http }
 ```
 
-Run this command to generate api layer
+4. Run this command to generate api layer
 
 ```shell
 node ./scripts/codegen.js
 ```
 
-Check generated file at `src/shared/api/api.gen.ts`
+5. Check generated file at `src/shared/api/api.gen.ts`
+
+
+
+6. Add `headers`, `options` or `mock`. Build routes and export api ready for usage
+
