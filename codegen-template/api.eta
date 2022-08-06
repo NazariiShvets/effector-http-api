@@ -35,7 +35,7 @@ const descriptionLines = _.compact([
 */
 <% } %>
 
-const routes = config.createRoutesConfig({
+const routesConfig = config.createRoutesConfig({
 
 <% apiRoutes.outOfModule && apiRoutes.outOfModule.forEach((route) => { %>
 
@@ -54,4 +54,4 @@ const routes = config.createRoutesConfig({
 <% }) %>
 })
 
-export { routes }
+export { routesConfig }
