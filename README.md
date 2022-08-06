@@ -113,7 +113,7 @@ calls will be batched with call which start a request
 const http = createHttp(instance);
 
 const routesConfig = http.createRoutesConfig({
- route: http.createRoute({ url: '/' })
+ route: http.createRoute<void,User[]>({ url: '/' })
 });
 
 routesConfig.options({
@@ -177,7 +177,7 @@ Raw version of route, without mapper, accessible by prop on route
 const http = createHttp(instance);
 
 const routesConfig = http.createRoutesConfig({
-  getData: http.createRoute({ url:'/' }) 
+  getData: http.createRoute<void, User[]>({ url:'/' }) 
 });
 
 const api = routesConfig.build();
