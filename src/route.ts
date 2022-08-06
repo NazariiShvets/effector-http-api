@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from 'axios';
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import type { Effect } from 'effector';
 import { createEffect } from 'effector';
 import { createBatchedEffect, createMockEffect } from './custom-effects';
@@ -9,7 +9,8 @@ import type {
   MockOptions,
   RequestConfigHandler,
   RouteFx,
-  RouteOptions
+  RouteOptions,
+  ValidationSchema
 } from './types';
 
 class Route<Dto, Contract> {
@@ -22,26 +23,26 @@ class Route<Dto, Contract> {
 
   private _mock: MockOptions<Dto, Contract> | undefined;
 
+  private _validationSchema: ValidationSchema<Contract> | undefined;
+
   private readonly getFx = () =>
     this._options.batch
-      ? createBatchedEffect<
-          Dto,
-          AxiosResponse<Contract, Dto>,
-          AxiosError<Contract, Dto>
-        >
-      : createEffect<
-          Dto,
-          AxiosResponse<Contract, Dto>,
-          AxiosError<Contract, Dto>
-        >;
+      ? createBatchedEffect<Dto, AxiosResponse<Contract, Dto>>
+      : createEffect<Dto, AxiosResponse<Contract, Dto>, Error>;
 
   private readonly createRouteFx = (
     fn: (dto: Dto) => AxiosRequestConfig<Dto>
-  ): Effect<Dto, AxiosResponse<Contract, Dto>, AxiosError<Contract, Dto>> => {
+  ): Effect<Dto, AxiosResponse<Contract, Dto>> => {
     const createRequestFx = this.getFx();
 
     return createRequestFx(async (config: Dto) =>
-      this.baseRequestFx(fn(config))
+      this.baseRequestFx(fn(config)).then(async response => {
+        if (this._validationSchema) {
+          await this._validationSchema.validate(response.data);
+        }
+
+        return response;
+      })
     );
   };
 
@@ -86,17 +87,25 @@ class Route<Dto, Contract> {
 
   public options = (config: RouteOptions) => {
     Object.assign(this._options, config);
+
+    return this;
   };
 
   public mock = (config: MockOptions<Dto, Contract>) => {
     this._mock = config;
+
+    return this;
+  };
+
+  public validation = (schema: ValidationSchema<Contract>) => {
+    this._validationSchema = schema;
+
+    return this;
   };
 
   public build = () => {
     if (this._mock) {
-      const rawFx = createMockEffect<Dto, Contract, AxiosError<Contract, Dto>>(
-        this._mock
-      );
+      const rawFx = createMockEffect<Dto, Contract>(this._mock);
 
       const resultFx = rawFx as unknown as RouteFx<Dto, Contract>;
       resultFx.rawResponseFx = rawFx as unknown as RouteFx<
@@ -121,14 +130,14 @@ class Route<Dto, Contract> {
   };
 
   public buildRouteFx = (
-    rawFx: Effect<Dto, AxiosResponse<Contract, Dto>, AxiosError<Contract, Dto>>
+    rawFx: Effect<Dto, AxiosResponse<Contract, Dto>>
   ): RouteFx<Dto, Contract> => {
     const createFx = this._options.batch
-      ? createBatchedEffect<Dto, Contract, AxiosError<Contract, Dto>>
+      ? createBatchedEffect<Dto, Contract>
       : createEffect;
 
-    const mappedFx = createFx<Dto, Contract, AxiosError<Contract, Dto>>(
-      async dto => rawFx(dto).then(response => response.data)
+    const mappedFx = createFx<Dto, Contract>(async dto =>
+      rawFx(dto).then(response => response.data)
     );
 
     const resultFx = mappedFx as RouteFx<Dto, Contract>;

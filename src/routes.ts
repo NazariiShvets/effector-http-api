@@ -1,4 +1,9 @@
-import type { MockOptions, RouteFx, RouteOptions } from './types';
+import type {
+  MockOptions,
+  RouteFx,
+  RouteOptions,
+  ValidationSchema
+} from './types';
 import { Route } from './route';
 import type { ShapeConfig } from './lib/typescript';
 
@@ -14,14 +19,18 @@ type RouteOptionsConfig<Shape> = Partial<{
     : RouteOptionsConfig<Shape[Key]>;
 }>;
 
-type MockOptionsFromRoute<TRoute> = TRoute extends Route<infer D, infer C>
-  ? MockOptions<D, C>
-  : TRoute;
+type ValidationConfig<Shape> = Partial<{
+  // eslint-disable-next-line no-unused-vars
+  [Key in keyof Shape]: Shape[Key] extends Route<infer _D, infer C>
+    ? ValidationSchema<C>
+    : RouteOptionsConfig<Shape[Key]>;
+}>;
 
 class Routes<
   Shape extends ShapeConfig<object, Route<any, any>>,
   MockShape extends RouteMocksConfig<Shape>,
-  OptionsShape extends RouteOptionsConfig<Shape>
+  OptionsShape extends RouteOptionsConfig<Shape>,
+  ValidationShape extends ValidationConfig<Shape>
 > {
   public constructor(private readonly routes: Shape) {}
 
@@ -29,19 +38,18 @@ class Routes<
 
   private _options: OptionsShape | undefined;
 
-  private readonly isMock = <V extends Route<any, any>>(
-    value: V,
-    mock?: unknown
-  ): mock is MockOptionsFromRoute<V> => !!mock;
+  private _validation: ValidationShape | undefined;
 
   private readonly traverse = <
     S extends Shape,
     M extends MockShape,
-    O extends OptionsShape
+    O extends OptionsShape,
+    V extends ValidationShape
   >(
     base: S,
     mocks: M,
-    options: O
+    options: O,
+    validations: V
   ) =>
     Object.entries(base).reduce((map, [key, value]) => {
       if (value instanceof Route) {
@@ -49,7 +57,7 @@ class Routes<
         // @ts-expect-error
         const mock = mocks?.[key];
 
-        if (this.isMock(value, mock)) {
+        if (mock) {
           value.mock(mock);
         }
 
@@ -59,6 +67,14 @@ class Routes<
 
         if (routeOptions) {
           value.options(routeOptions);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        const validation = validations?.[key];
+
+        if (validation) {
+          value.validation(validation);
         }
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -79,7 +95,10 @@ class Routes<
         mocks?.[key] ?? {},
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        options?.[key] ?? {}
+        options?.[key] ?? {},
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        validations?.[key] ?? {}
       );
 
       return map;
@@ -93,6 +112,12 @@ class Routes<
 
   public options = (options: OptionsShape) => {
     this._options = options;
+
+    return this;
+  };
+
+  public validation = (validation: ValidationShape) => {
+    this._validation = validation;
 
     return this;
   };
@@ -112,7 +137,8 @@ class Routes<
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       this._mocks ?? {},
-      this._options ?? {}
+      this._options ?? {},
+      this._validation ?? {}
     ) as GetRoutesShape<Shape>;
   };
 }

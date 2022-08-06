@@ -26,8 +26,8 @@ yarn add axios effector
 
 ```typescript
 // src/shared/api/my-backend.ts`
-import {createHttp} from 'effector-http-api'
-import type {User, CreateUserDto, UpdateUserDto} from './models'
+import { createHttp } from 'effector-http-api'
+import type { User, CreateUserDto, UpdateUserDto } from './models'
 
 const instance = axios.create()
 const http = createHttp(instance);
@@ -86,8 +86,8 @@ To attach headers to requests, call `http.headers(unit)`, and pass as payload `U
 ### Usage
 
 ```typescript
-import {createEvent, createStore} from "effector";
-import {AxiosRequestHeaders} from "axios";
+import { createEvent, createStore } from "effector";
+import { AxiosRequestHeaders } from "axios";
 
 
 const headersChanged = createEvent<AxiosRequestHeaders>()
@@ -125,6 +125,60 @@ routesConfig.options({
 const api = routesConfig.build();
 ```
 
+## Validation:
+
+Validate response from backend before resolve request
+
+### `yup` validator  example
+
+```typescript
+import { number, object, string } from "yup";
+
+const http = createHttp(instance);
+
+const routesConfig = http.createRoutesConfig({
+ getUsers: http.createRoute<void, User[]>({url: '/'}),
+});
+
+routesConfig.validation({
+ getUsers: object({
+  id: string().required(),
+  age: number().required()
+ }).required()
+})
+
+
+const api = routesConfig.build();
+```
+
+### Custom validator example
+
+```typescript
+import { ValidationSchema } from "effector-http-api";
+
+const http = createHttp(instance);
+
+const routesConfig = http.createRoutesConfig({
+ getUsers: http.createRoute<void, User[]>({url: '/'}),
+});
+
+class MyCustomValidator implements ValidationSchema<User> {
+ public validate = (user: User) => {
+  //... validate user
+  // return Promise.resolve() if passed
+  // return Promise.reject() if not
+ }
+}
+
+routesConfig.validation({
+ getUsers: new MyCustomValidator()
+})
+
+
+const api = routesConfig.build();
+```
+
+---
 ## Mock:
 
 Configuration for return mock response instead calling request
@@ -149,7 +203,7 @@ routesConfig.mock({
    * Usefull, then mock responseFn has timeouts or `mock.delay`
    */
   batch: true,
-	 
+  
   delay: 1500,
   response: mockedUsers
  },

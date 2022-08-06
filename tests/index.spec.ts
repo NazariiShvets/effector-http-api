@@ -2,10 +2,12 @@ import type { AxiosInstance, AxiosRequestHeaders } from 'axios';
 import { allSettled, createEvent, fork } from 'effector';
 import { faker } from '@faker-js/faker';
 
+import type { ValidationSchema } from '../src';
 import { createHttp } from '../src';
 import type { Http } from '../src/http';
 import { isBatchedEffect } from '../src/custom-effects/batched-effect';
 import { isMockEffect } from '../src/custom-effects/mock-effect';
+import { object, string, ValidationError } from 'yup';
 
 describe('effector-http-api', () => {
   let instance: jest.Mock;
@@ -436,6 +438,145 @@ describe('effector-http-api', () => {
       expect(isMockEffect(api.test.rawResponseFx)).toBe(true);
       expect(isBatchedEffect(api.test)).toBe(true);
       expect(isBatchedEffect(api.test.rawResponseFx)).toBe(true);
+    });
+  });
+
+  describe('validation', () => {
+    type Contract = { api: string };
+
+    let instance: jest.Mock;
+    let http: Http;
+    let response: Contract;
+    let watchFn: jest.Mock;
+
+    beforeEach(() => {
+      instance = jest.fn();
+      watchFn = jest.fn();
+
+      response = { api: faker.datatype.string() };
+      http = createHttp(instance as unknown as AxiosInstance);
+    });
+
+    it('should pass if validation passed', async () => {
+      instance.mockResolvedValue(Promise.resolve({ data: response }));
+
+      const schema = object<Contract>({
+        api: string().required()
+      }).required();
+
+      const api = http
+        .createRoute<void, Contract>({ url: '/' })
+        .validation(schema)
+        .build();
+
+      api.doneData.watch(watchFn);
+
+      const scope = fork();
+
+      await allSettled(api, { scope });
+
+      expect(watchFn).toBeCalledTimes(1);
+      expect(watchFn).toBeCalledWith(response);
+    });
+
+    it('should fail if validation failed', async () => {
+      instance.mockResolvedValue(Promise.resolve({ data: {} }));
+
+      type Contract = { api: string };
+      const schema = object<Contract>({
+        api: string().required()
+      }).required();
+
+      const api = http
+        .createRoute<void, Contract>({ url: '/' })
+        .validation(schema)
+        .build();
+
+      api.failData.watch(watchFn);
+
+      const scope = fork();
+
+      await allSettled(api, { scope });
+
+      expect(watchFn).toBeCalledTimes(1);
+      expect(watchFn.mock.calls[0][0]).toBeInstanceOf(ValidationError);
+    });
+
+    it('should work with shape', async () => {
+      instance.mockResolvedValue(Promise.resolve({ data: {} }));
+
+      type Contract = { api: string };
+      const schema = object<Contract>({
+        api: string().required()
+      }).required();
+
+      const routesConfig = http.createRoutesConfig({
+        route: http.createRoute<void, Contract>({ url: '/' })
+      });
+
+      const api = routesConfig.validation({ route: schema }).build();
+
+      api.route.failData.watch(watchFn);
+
+      const scope = fork();
+
+      await allSettled(api.route, { scope });
+
+      expect(watchFn).toBeCalledTimes(1);
+      expect(watchFn.mock.calls[0][0]).toBeInstanceOf(ValidationError);
+    });
+
+    it('should pass with custom validator', async () => {
+      instance.mockResolvedValue(Promise.resolve({ data: response }));
+
+      class Validator implements ValidationSchema<Contract> {
+        // eslint-disable-next-line no-unused-vars
+        public readonly validate = async (_: Contract) => Promise.resolve();
+      }
+
+      const routesConfig = http.createRoutesConfig({
+        route: http.createRoute<void, Contract>({ url: '/' })
+      });
+
+      const api = routesConfig.validation({ route: new Validator() }).build();
+
+      api.route.doneData.watch(watchFn);
+
+      const scope = fork();
+
+      await allSettled(api.route, { scope });
+
+      expect(watchFn).toBeCalledTimes(1);
+      expect(watchFn).toBeCalledWith(response);
+    });
+
+    it('should fail with custom validator', async () => {
+      instance.mockResolvedValue(Promise.resolve({ data: {} }));
+
+      class ValidationError {
+        public constructor(public readonly name: string) {}
+      }
+
+      class Validator<Shape> implements ValidationSchema<Shape> {
+        // eslint-disable-next-line no-unused-vars
+        public readonly validate = async (_: Shape) =>
+          Promise.reject(new ValidationError('Error'));
+      }
+
+      const routesConfig = http.createRoutesConfig({
+        route: http.createRoute<void, Contract>({ url: '/' })
+      });
+
+      const api = routesConfig.validation({ route: new Validator() }).build();
+
+      api.route.failData.watch(watchFn);
+
+      const scope = fork();
+
+      await allSettled(api.route, { scope });
+
+      expect(watchFn).toBeCalledTimes(1);
+      expect(watchFn.mock.calls[0][0]).toBeInstanceOf(ValidationError);
     });
   });
 
