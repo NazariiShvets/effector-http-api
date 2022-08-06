@@ -311,5 +311,5 @@ node ./scripts/codegen.js
 
 
 
-6. Add `headers`, `options` or `mock`. Build routes and export `api` ready for usage
+6. Add `headers`, `options`, `mock`, `validation`. Build routes and export `api` ready for usage
 
