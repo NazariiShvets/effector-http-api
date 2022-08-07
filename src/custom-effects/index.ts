@@ -1,2 +1,2 @@
-export { createBatchedEffect } from './batched-effect';
-export { createMockEffect } from './mock-effect';
+export { createBatchedEffect, isBatchedEffect } from './batched-effect';
+export { createMockEffect, isMockEffect } from './mock-effect';

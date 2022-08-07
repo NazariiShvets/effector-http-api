@@ -1,92 +1,74 @@
-import type {
-  AxiosRequestConfig,
-  AxiosRequestHeaders,
-  AxiosResponse
-} from 'axios';
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { Effect } from 'effector';
 
-import type { Store } from 'effector';
-
-type ControllerRouteOptions = {
+type RouteFx<Dto, Contract> = Effect<Dto, Contract> & {
   /**
-   * Don`t send options.authHeaders with request
+   * RouteEffect without mappings: (response) => response.data
    */
-  disableAuth?: boolean;
-
-  /**
-   * If route called multiple times while request is pending,
-   * calls will be batched with call which start a request
-   */
-  batchConcurrentRequests?: boolean;
+  rawResponseFx: Effect<Dto, AxiosResponse<Contract, Dto>>;
 };
 
-type RouteOptions<Dto, Contract> = ControllerRouteOptions & {
+type RouteOptions = {
   /**
-   * Custom resolver for mapping response
+   * First effect call await publish handler result
    *
-   * Example: POST request Dto has {id: string}, backend returns void,
-   *
-   *`mapRawResponse: (response) => response.request.data.id` returns id what you send
-   *
-   * Note: response.request.data in AxiosResponse is non required field. This case you need match yourself
+   * Rest calls, waiting until first resolved, receive same result
    */
-  mapRawResponse?: <Response extends AxiosResponse<any, Dto>>(
-    raw: Response
-  ) => Contract;
-
-  /**
-   * Trim payload provided to effect
-   *
-   * By design payload used as "data" if Dto=void
-   * This option can remove this behavior
-   */
-  forceTrimPayload?: boolean;
-
-  mock?: {
-    /**
-     * Returns instead real call request
-     */
-    response: Contract | RouteOptionsMockResponseHandler<Dto, Contract>;
-
-    /**
-     * Delay before return `mock.response`
-     */
-    delay?: number;
-  };
+  batch?: true;
 };
 
-type RouteOptionsMockResponseHandler<Dto, Contract> = (dto: Dto) => Contract;
+type ValidationSchema<Shape> = {
+  /**
+   * Validator fn
+   */
+  validate: (shape: Shape) => Promise<any>;
+};
+
+type MockOptions<Dto, Contract> = {
+  /**
+   * await setTimeout
+   */
+  delay?: number;
+
+  /**
+   * Custom mock response
+   *
+   * Can provide fn: (dto:Dto) => Contract
+   */
+  response: Contract | MockResponseHandler<Dto, Contract>;
+
+  /**
+   * Batch mock effect calls
+   *
+   * Useful when `Dto = void`
+   * and delay or custom setTimeout used to batch requests
+   */
+  batch?: boolean;
+};
+
+type MockResponseHandler<Dto, Contract> = (dto: Dto) => Contract;
 
 type RequestConfigHandler<Dto> =
   | ApiRequestConfig<Dto>
   | NormalizedRequestHandler<Dto>;
 
-type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig;
+type NormalizedRequestHandler<Dto> = (dto: Dto) => ApiRequestConfig<any>;
 
-type ApiUnits<
-  Auth extends AxiosRequestHeaders,
-  Custom extends AxiosRequestHeaders
-> = {
-  auth: Store<Auth>;
-  custom: Store<Custom>;
+type ApiRequestConfig<Data> = AxiosRequestConfig<Data> & {
+  /**
+   * Flag to convert AxiosRequestConfig.data to FormData
+   */
+  formData?: boolean;
 };
 
-enum ContentType {
-  Json = 'application/json',
-  FormData = 'multipart/form-data',
-  UrlEncoded = 'application/x-www-form-urlencoded'
-}
-
-type ApiRequestConfig<Data = any> = AxiosRequestConfig<Data> & {
-  type?: ContentType;
-};
-
-export { ContentType };
 export type {
+  RouteFx,
   RouteOptions,
+  MockResponseHandler,
+  ApiRequestConfig,
   RequestConfigHandler,
-  ControllerRouteOptions,
   NormalizedRequestHandler,
-  ApiUnits,
-  RouteOptionsMockResponseHandler,
-  ApiRequestConfig
+  MockOptions,
+  AxiosRequestConfig,
+  ValidationSchema
 };

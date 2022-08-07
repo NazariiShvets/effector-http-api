@@ -14,7 +14,6 @@ module.exports = {
 
   plugins: [
     "@typescript-eslint",
-    "react",
     "prettier",
     "effector",
     "import",
@@ -30,15 +29,6 @@ module.exports = {
 
     project: "./tsconfig.json",
 
-    ecmaFeatures: {
-      jsx: true,
-    },
-  },
-
-  settings: {
-    react: {
-      version: "detect",
-    },
   },
 
   globals: {
@@ -48,9 +38,8 @@ module.exports = {
   env: {
     browser: true,
     node: true,
+    jest: true
   },
-
-  overrides: [{ files: ["src/**/*.{ts,tsx}"] }],
 
   rules: {
     // disable
@@ -296,14 +285,6 @@ module.exports = {
       },
     ],
 
-    "@typescript-eslint/no-extraneous-class": [
-      "error",
-      {
-        allowConstructorOnly: true,
-        allowWithDecorator: true,
-      },
-    ],
-
     "@typescript-eslint/member-ordering": [
       "error",
       {
@@ -353,60 +334,6 @@ module.exports = {
         leadingUnderscore: "allow",
         trailingUnderscore: "allow",
       },
-    ],
-
-    "react/display-name": "off",
-    "react/no-array-index-key": "error",
-    "react/no-danger-with-children": "error",
-    "react/no-deprecated": "error",
-    "react/no-find-dom-node": "error",
-    "react/no-invalid-html-attribute": "error",
-    "react/forbid-foreign-prop-types": "error",
-    "react/no-render-return-value": "error",
-    "react/no-string-refs": "error",
-    "react/no-this-in-sfc": "error",
-    "react/no-unescaped-entities": "error",
-    "react/no-unknown-property": "error",
-    "react/no-namespace": "error",
-    "react/no-unstable-nested-components": "error",
-    "react/no-unused-prop-types": "error",
-    "react/prefer-stateless-function": "error",
-    "react/self-closing-comp": "error",
-    "react/style-prop-object": "error",
-    "react/void-dom-elements-no-children": "error",
-    "react/jsx-closing-tag-location": "error",
-    "react/jsx-pascal-case": "error",
-    "react/jsx-key": "error",
-    "react/jsx-newline": "error",
-    "react/jsx-no-constructed-context-values": "error",
-    "react/jsx-no-duplicate-props": "error",
-    "react/jsx-no-script-url": "error",
-    "react/jsx-no-target-blank": "error",
-    "react/jsx-fragments": ["error", "syntax"],
-    "react/jsx-curly-brace-presence": ["error", "never"],
-    "react/jsx-boolean-value": ["error", "never"],
-    "react/destructuring-assignment": ["error", "always"],
-
-    "react/jsx-no-useless-fragment": ["error", { allowExpressions: true }],
-    "react/jsx-max-depth": ["error", { max: 7 }],
-    "react/no-children-prop": ["error", { allowFunctions: true }],
-
-    "react/function-component-definition": [
-      "error",
-      {
-        namedComponents: "arrow-function",
-        unnamedComponents: "arrow-function",
-      },
-    ],
-
-    "react/jsx-handler-names": [
-      "error",
-      {
-        eventHandlerPrefix: "on",
-        eventHandlerPropPrefix: "on",
-        checkLocalVariables: true,
-        checkInlineFunction: true,
-      },
-    ],
+    ]
   },
 };
