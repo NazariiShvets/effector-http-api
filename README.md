@@ -331,3 +331,15 @@ node ./scripts/codegen.js
 
 6. Add `headers`, `options`, `mock`, `validation`. Build routes and export `api` ready for usage
 
+
+---
+## Babel-preset
+
+```js
+//babel.config.js
+
+module.exports = {
+  presets: ["effector-http-api/babel-preset"]
+}
+```
+
