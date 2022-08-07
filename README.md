@@ -241,6 +241,24 @@ api.getData.rawResponseFx // without mappings
 ```
 
 ---
+## BaseRequestFx
+
+All routes attached to single `baseRequestFx`
+
+Accessible from `http.baseRequestFx`
+
+```typescript
+const http = createHttp(instance);
+
+const requestWith401statusFailed = sample({
+  clock: http.baseRequestFx.failData,
+  filter: is401Error,
+});
+
+export { requestWith401statusFailed }
+```
+
+---
 
 # Generate api layer from swagger
 
