@@ -1,7 +1,7 @@
 import type { Effect } from 'effector';
 import { createEffect } from 'effector';
 
-import type { MockOptions, RouteOptionsMockResponseHandler } from '../types';
+import type { MockOptions, MockResponseHandler } from '../types';
 import { createBatchedEffect } from './batched-effect';
 
 type MockEffect<Params, Done, Fail> = Effect<Params, Done, Fail> & {
@@ -43,7 +43,7 @@ const isMockEffect = <Params, Done, Error>(
 
 function isMockResponseHandler<Dto, Contract>(
   mockResponse: Required<MockOptions<Dto, Contract>>['response']
-): mockResponse is RouteOptionsMockResponseHandler<Dto, Contract> {
+): mockResponse is MockResponseHandler<Dto, Contract> {
   return typeof mockResponse === 'function';
 }
 
