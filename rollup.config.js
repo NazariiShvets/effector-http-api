@@ -40,12 +40,12 @@ const plugins =  [
         'effector/babel-plugin',
         {
           factories: [
-						'./batched-effect',
-						'./custom-effects',
-						'./custom-effects/index',
-						'./route',
-						'./http'
-					]
+            './batched-effect',
+            './custom-effects',
+            './custom-effects/index',
+            './route',
+            './http'
+          ]
         }
       ],
     ]
