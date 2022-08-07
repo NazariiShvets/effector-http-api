@@ -5,3 +5,4 @@ const createHttp = (...args: ConstructorParameters<typeof Http>) =>
 
 export { createHttp };
 export type { ValidationSchema } from './types';
+export { createBatchedEffect, createMockEffect } from './custom-effects';
