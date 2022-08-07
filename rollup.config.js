@@ -34,7 +34,13 @@ const plugins =  [
       [
         'effector/babel-plugin',
         {
-          factories: ['src/index.ts']
+          factories: [
+						'./batched-effect',
+						'./custom-effects',
+						'./custom-effects/index',
+						'./route',
+						'./http'
+					]
         }
       ],
     ]
