@@ -14,13 +14,18 @@ const external = [
 
 const plugins =  [
   typescript({
-    clean: true
+    clean: true,
+    tsconfigOverride: {
+      exclude: ["**/tests", "**/*.test.ts"]
+    }
   }),
 
   babel({
     exclude: 'node_modules/**',
 
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    sourceMaps: true,
+
+    extensions: ['.js', '.ts'],
 
     runtimeHelpers: true,
 
