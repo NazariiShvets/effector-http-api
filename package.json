@@ -1,6 +1,6 @@
 {
   "name": "effector-http-api",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Setup API with ease",
   "main": "./dist/index.js",
   "types": "./dist/index.d.js",

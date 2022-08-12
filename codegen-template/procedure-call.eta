@@ -74,7 +74,7 @@ const isSkipHandler = isVoidRequest || (isSingleArg && (!!bodyTmpl || isQueryPro
 <%~ routeDocs.lines %>
 
  */
-<%~ route.routeName.usage %> : config.createRoute<<%~ wrapperArgsType %>, <%~ route.response.type %>>(<%~ !isSkipHandler ? `(${wrapperArgsName}) =>` : '' %> ({
+<%~ route.routeName.usage %> : http.createRoute<<%~ wrapperArgsType %>, <%~ route.response.type %>>(<%~ !isSkipHandler ? `(${wrapperArgsName}) =>` : '' %> ({
         url: `<%~ routePathWithParam %>`,
         method: '<%~ _.upperCase(method) %>',
         <%~ !isQueryProvidedForGetMethod && queryTmpl ? `params: ${isWrappedInDto ? 'dto.' : '' } ${queryTmpl},` : '' %>
