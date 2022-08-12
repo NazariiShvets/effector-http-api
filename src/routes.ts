@@ -23,7 +23,7 @@ type ValidationConfig<Shape> = Partial<{
   // eslint-disable-next-line no-unused-vars
   [Key in keyof Shape]: Shape[Key] extends Route<infer _D, infer C>
     ? ValidationSchema<C>
-    : RouteOptionsConfig<Shape[Key]>;
+    : ValidationConfig<Shape[Key]>;
 }>;
 
 class Routes<
