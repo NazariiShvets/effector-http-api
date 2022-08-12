@@ -564,10 +564,18 @@ describe('effector-http-api', () => {
       }
 
       const routesConfig = http.createRoutesConfig({
-        route: http.createRoute<void, Contract>({ url: '/' })
+        route: http.createRoute<void, Contract>({ url: '/' }),
+        deep: {
+          route: http.createRoute<void, Contract>({ url: '/' })
+        }
       });
 
-      const api = routesConfig.validation({ route: new Validator() }).build();
+      const api = routesConfig
+        .validation({
+          route: new Validator(),
+          deep: { route: new Validator() }
+        })
+        .build();
 
       api.route.failData.watch(watchFn);
 
