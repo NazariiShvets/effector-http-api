@@ -196,7 +196,7 @@ const routesConfig = http.createRoutesConfig({
  getUser: http.createRoute<User['id'], User>({ url: '/' }),
 });
 
-routesConfig.mock({
+routesConfig.mocks({
  getUsers: {
    /**
    * Same as `options.batch`.
@@ -241,7 +241,7 @@ api.getData.rawResponseFx // without mappings
 ```
 
 ---
-## BaseRequestFx
+## BaseHttpFx
 
 All routes attached to single `baseRequestFx`
 
@@ -251,7 +251,7 @@ Accessible from `http.baseRequestFx`
 const http = createHttp(instance);
 
 const requestWith401statusFailed = sample({
-  clock: http.baseRequestFx.failData,
+  clock: http.baseHttpFx.failData,
   filter: is401Error,
 });
 
