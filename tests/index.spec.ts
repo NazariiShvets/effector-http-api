@@ -19,6 +19,32 @@ describe('effector-http-api', () => {
     http = createHttp(instance as unknown as AxiosInstance);
   });
 
+  describe('instance', () => {
+    it('should change instances', async () => {
+      const instance2 = jest.fn() as unknown as AxiosInstance;
+
+      const url = faker.internet.url();
+
+      const api = http
+        .createRoutesConfig({ test: http.createRoute({ url }) })
+        .build();
+
+      const scope = fork();
+
+      await allSettled(api.test, { scope });
+
+      expect(instance).toBeCalledTimes(1);
+      expect(instance2).toBeCalledTimes(0);
+
+      http.setHttpInstance(instance2);
+
+      await allSettled(api.test, { scope });
+
+      expect(instance).toBeCalledTimes(1);
+      expect(instance2).toBeCalledTimes(1);
+    });
+  });
+
   describe('request', () => {
     beforeEach(() => {
       instance.mockResolvedValue(Promise.resolve({}));

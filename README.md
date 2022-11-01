@@ -259,6 +259,25 @@ export { requestWith401statusFailed }
 ```
 
 ---
+## Instance
+
+New http instance can be set by `http.setHttpInstance(newHttpInstance)`
+
+
+```typescript
+//api/config.ts
+const http = createHttp(instance);
+
+export {http};
+
+//setup-tests.ts
+import { http } from 'api';
+import { createMockHttpInstance } from 'tests/mocks'
+
+http.setHttpInstance(createMockHttpInstance())
+```
+
+---
 
 # Generate api layer from swagger
 

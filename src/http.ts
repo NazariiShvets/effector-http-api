@@ -12,11 +12,11 @@ import { Route } from './route';
 import { Routes } from './routes';
 
 class Http {
-  public constructor(http: AxiosInstance) {
+  public constructor(private httpInstance: AxiosInstance) {
     this.baseHttpFx = attach({
       source: this.$headers,
       effect: async (headers, config: AxiosRequestConfig) =>
-        http(this.attachHeaders(config, headers))
+        this.httpInstance(this.attachHeaders(config, headers))
     });
   }
 
@@ -39,6 +39,10 @@ class Http {
     });
 
     return this;
+  };
+
+  public setHttpInstance = (httpInstance: AxiosInstance) => {
+    this.httpInstance = httpInstance;
   };
 
   public createRoute = <Dto = void, Contract = void>(
