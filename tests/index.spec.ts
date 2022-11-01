@@ -1,4 +1,4 @@
-import type { AxiosInstance, AxiosRequestHeaders } from 'axios';
+import type { AxiosInstance, RawAxiosRequestHeaders } from 'axios';
 import { allSettled, createEvent, fork } from 'effector';
 import { faker } from '@faker-js/faker';
 
@@ -51,7 +51,7 @@ describe('effector-http-api', () => {
         const newHeadersValue = faker.datatype.string();
         const url = faker.internet.url();
 
-        const headersChanged = createEvent<AxiosRequestHeaders>();
+        const headersChanged = createEvent<RawAxiosRequestHeaders>();
 
         const http = createHttp(instance as unknown as AxiosInstance);
         const api = http
@@ -105,7 +105,7 @@ describe('effector-http-api', () => {
         const routeHeaderValue = faker.datatype.string();
         const url = faker.internet.url();
 
-        const headersChanged = createEvent<AxiosRequestHeaders>();
+        const headersChanged = createEvent<RawAxiosRequestHeaders>();
 
         const http = createHttp(instance as unknown as AxiosInstance);
         const api = http

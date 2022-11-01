@@ -1,8 +1,8 @@
 import type {
   AxiosInstance,
   AxiosRequestConfig,
-  AxiosRequestHeaders,
-  AxiosResponse
+  AxiosResponse,
+  RawAxiosRequestHeaders
 } from 'axios';
 import type { Effect, Unit } from 'effector';
 import { attach, createStore, sample } from 'effector';
@@ -26,13 +26,13 @@ class Http {
 
   private readonly attachHeaders = (
     config: AxiosRequestConfig,
-    storeHeaders: AxiosRequestHeaders
+    storeHeaders: RawAxiosRequestHeaders
   ): AxiosRequestConfig => ({
     ...config,
     headers: { ...storeHeaders, ...(config?.headers ?? {}) }
   });
 
-  public headers = ($headers: Unit<AxiosRequestHeaders>) => {
+  public headers = ($headers: Unit<RawAxiosRequestHeaders>) => {
     sample({
       clock: $headers,
       target: this.$headers

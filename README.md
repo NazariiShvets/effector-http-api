@@ -81,20 +81,20 @@ export { api }
 
 ## Headers
 
-To attach headers to requests, call `http.headers(unit)`, and pass as payload `Unit<AxiosRequestHeaders>`
+To attach headers to requests, call `http.headers(unit)`, and pass as payload `Unit<RawAxiosRequestHeaders>`
 
 ### Usage
 
 ```typescript
 import { createEvent, createStore } from "effector";
-import { AxiosRequestHeaders } from "axios";
+import { RawAxiosRequestHeaders } from "axios";
 
 
-const headersChanged = createEvent<AxiosRequestHeaders>()
+const headersChanged = createEvent<RawAxiosRequestHeaders>()
 createHttp(instance).headers(headersChanged);
 
 // or
-const $headers = createStore<AxiosRequestHeaders>({})
+const $headers = createStore<RawAxiosRequestHeaders>({})
 createHttp(instance).headers($headers);
 ```
 
