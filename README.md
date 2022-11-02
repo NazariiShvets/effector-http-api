@@ -83,6 +83,11 @@ export { api }
 
 To attach headers to requests, call `http.headers(unit)`, and pass as payload `Unit<RawAxiosRequestHeaders>`
 
+`http.headers(unit)` it alias `sample({clock: unit, target: $innerHttpHeaders })`, if you need
+replace `$innerHttpHeaders` with your store (in case of defaultValues; or with effector-storage/local, which don't trigger `$store.updates`)
+You can pass custom store by `createHttp(instance, $defaultHeaders)` 
+
+
 ### Usage
 
 ```typescript
@@ -95,7 +100,7 @@ createHttp(instance).headers(headersChanged);
 
 // or
 const $headers = createStore<RawAxiosRequestHeaders>({})
-createHttp(instance).headers($headers);
+createHttp(instance, $headers);
 ```
 
 ---

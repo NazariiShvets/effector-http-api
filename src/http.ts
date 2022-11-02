@@ -4,7 +4,7 @@ import type {
   AxiosResponse,
   RawAxiosRequestHeaders
 } from 'axios';
-import type { Effect, Unit } from 'effector';
+import type { Effect, Store, Unit } from 'effector';
 import { attach, createStore, sample } from 'effector';
 import type { RequestConfigHandler } from './types';
 import type { ShapeConfig } from './lib/typescript';
@@ -12,7 +12,13 @@ import { Route } from './route';
 import { Routes } from './routes';
 
 class Http {
-  public constructor(private httpInstance: AxiosInstance) {
+  public constructor(
+    private httpInstance: AxiosInstance,
+
+    $defaultHeaders: Store<RawAxiosRequestHeaders> = createStore({})
+  ) {
+    this.$headers = $defaultHeaders;
+
     this.baseHttpFx = attach({
       source: this.$headers,
       effect: async (headers, config: AxiosRequestConfig) =>
@@ -20,7 +26,7 @@ class Http {
     });
   }
 
-  private readonly $headers = createStore({});
+  private readonly $headers: Store<RawAxiosRequestHeaders>;
 
   public readonly baseHttpFx: Effect<AxiosRequestConfig, AxiosResponse>;
 

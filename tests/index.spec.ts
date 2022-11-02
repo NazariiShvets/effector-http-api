@@ -1,5 +1,5 @@
 import type { AxiosInstance, RawAxiosRequestHeaders } from 'axios';
-import { allSettled, createEvent, fork } from 'effector';
+import { allSettled, createEvent, createStore, fork } from 'effector';
 import { faker } from '@faker-js/faker';
 
 import type { ValidationSchema } from '../src';
@@ -72,6 +72,34 @@ describe('effector-http-api', () => {
     });
 
     describe('headers', () => {
+      it('should use default value if store provided', async () => {
+        const url = faker.internet.url();
+        const tokenValue = faker.datatype.uuid();
+
+        const $token = createStore(tokenValue);
+        const $headers = $token.map(
+          (token): RawAxiosRequestHeaders => ({ Authorization: token })
+        );
+
+        const http = createHttp(instance as unknown as AxiosInstance, $headers);
+        const api = http
+          .createRoutesConfig({ test: http.createRoute({ url }) })
+          .build();
+
+        const scope = fork();
+
+        await allSettled(api.test, { scope });
+
+        expect(instance).toBeCalledTimes(1);
+        expect(instance).toBeCalledWith({
+          url,
+          headers: {
+            Authorization: tokenValue
+          },
+          method: 'GET'
+        });
+      });
+
       it('should change headers', async () => {
         const headerValue = faker.datatype.string();
         const newHeadersValue = faker.datatype.string();
