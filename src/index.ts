@@ -1,7 +1,9 @@
 import { Http } from './http';
 
-const createHttp = (...args: ConstructorParameters<typeof Http>) =>
-  new Http(...args);
+const createHttp = (
+  instance: ConstructorParameters<typeof Http>[0],
+  defaultHeaders?: ConstructorParameters<typeof Http>[1]
+) => new Http(instance, defaultHeaders);
 
 export { createHttp };
 export type { ValidationSchema } from './types';
