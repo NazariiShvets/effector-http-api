@@ -52,7 +52,7 @@ const routesConfig = http.createRoutesConfig({
  }),
 
  // If you need to customize behavior of dto — use callback instead of config
- update: http.creteRoute<{ id: User['id'], data: UpdateUserDto }, User>(({id, data}) => ({
+ update: http.createRoute<{ id: User['id'], data: UpdateUserDto }, User>(({id, data}) => ({
   url: `/${id}`,
   method: 'PUT',
   data
