@@ -20,7 +20,60 @@ describe('effector-http-api', () => {
   });
 
   describe('instance', () => {
-    it('should change instances', async () => {
+    it('should change shared scope instance', async () => {
+      const sharedInstance = jest
+        .fn()
+        .mockResolvedValue({ data: {} }) as unknown as AxiosInstance;
+      const instance1 = jest
+        .fn()
+        .mockResolvedValue({ data: {} }) as unknown as AxiosInstance;
+      const instance2 = jest
+        .fn()
+        .mockResolvedValue({ data: {} }) as unknown as AxiosInstance;
+
+      const $instance = createStore<AxiosInstance>(instance1);
+
+      const http = createHttp($instance);
+
+      const url = faker.internet.url();
+
+      const api = http
+        .createRoutesConfig({ test: http.createRoute({ url }) })
+        .build();
+
+      const scope1 = fork();
+      const scope2 = fork({ values: [[http.$instance, instance2]] });
+
+      await api.test();
+      http.setHttpInstance(sharedInstance);
+
+      expect(sharedInstance).toBeCalledTimes(0);
+      expect(instance1).toBeCalledTimes(1);
+      expect(instance2).toBeCalledTimes(0);
+
+      await allSettled(api.test, { scope: scope1 });
+      await allSettled(api.test, { scope: scope2 });
+
+      expect(sharedInstance).toBeCalledTimes(1);
+      expect(instance1).toBeCalledTimes(1);
+      expect(instance2).toBeCalledTimes(1);
+
+      await allSettled(api.test, { scope: scope1 });
+      await allSettled(api.test, { scope: scope2 });
+
+      expect(sharedInstance).toBeCalledTimes(2);
+      expect(instance1).toBeCalledTimes(1);
+      expect(instance2).toBeCalledTimes(2);
+
+      await allSettled(api.test, { scope: scope1 });
+      await allSettled(api.test, { scope: scope2 });
+
+      expect(sharedInstance).toBeCalledTimes(3);
+      expect(instance1).toBeCalledTimes(1);
+      expect(instance2).toBeCalledTimes(3);
+    });
+
+    it('should change instances by event', async () => {
       const instance2 = jest.fn() as unknown as AxiosInstance;
 
       const url = faker.internet.url();
@@ -36,12 +89,41 @@ describe('effector-http-api', () => {
       expect(instance).toBeCalledTimes(1);
       expect(instance2).toBeCalledTimes(0);
 
-      http.setHttpInstance(instance2);
+      await allSettled(http.updateHttpInstance, { scope, params: instance2 });
 
       await allSettled(api.test, { scope });
 
       expect(instance).toBeCalledTimes(1);
       expect(instance2).toBeCalledTimes(1);
+    });
+
+    it('should change instances as store', async () => {
+      const instance1 = jest.fn() as unknown as AxiosInstance;
+      const instance2 = jest.fn() as unknown as AxiosInstance;
+
+      const $instance = createStore<AxiosInstance>(instance1);
+
+      const http = createHttp($instance);
+
+      const url = faker.internet.url();
+
+      const api = http
+        .createRoutesConfig({ test: http.createRoute({ url }) })
+        .build();
+
+      const scope = fork({
+        values: [[$instance, instance2]]
+      });
+
+      await allSettled(api.test, { scope });
+
+      expect(instance1).toBeCalledTimes(0);
+      expect(instance2).toBeCalledTimes(1);
+
+      await allSettled(api.test, { scope });
+
+      expect(instance1).toBeCalledTimes(0);
+      expect(instance2).toBeCalledTimes(2);
     });
   });
 
