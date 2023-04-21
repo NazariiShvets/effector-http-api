@@ -282,6 +282,44 @@ import { createMockHttpInstance } from 'tests/mocks'
 http.setHttpInstance(createMockHttpInstance())
 ```
 
+### ForkAPI
+
+See more examples in [tests](https://github.com/NazariiShvets/effector-http-api/blob/e3e957b6e0f8a03375290381e1be5e8c5398c9e3/tests/index.spec.ts#L22)
+```typescript
+//api/config.ts
+const $instance = createStore(
+    axios.create({ baseURL: 'https://api.com' }), 
+    { serialize: 'ignore' }
+);
+
+const http = createHttp($instance);
+
+export { http };
+
+//pages/home.ts
+const getServerSideProps = async () => {
+    const newInstance = axios.create({ 
+        baseURL: 'https://api.com' 
+    });
+    
+    //interceptors only be created for this instance
+    newInstance.interseptors.request.use(...);
+
+    // replace store in fork creation phase
+    const scope1 = fork({ values: [[http.$instance, newInstance]] });
+    
+
+    // or replace store in by scoped event
+    const scope2 = fork({});
+    await allSettled(
+        http.updateHttpInstance, 
+        { scope: scope2, params: newInstance }
+    );
+    
+    return {...}
+}
+```
+
 ---
 
 # Generate api layer from swagger
