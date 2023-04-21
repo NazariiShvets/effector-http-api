@@ -309,7 +309,7 @@ const getServerSideProps = async () => {
     const scope1 = fork({ values: [[http.$instance, newInstance]] });
     
 
-    // or replace store in by scoped event
+    // or replace store by scoped event
     const scope2 = fork({});
     await allSettled(
         http.updateHttpInstance, 
