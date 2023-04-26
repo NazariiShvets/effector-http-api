@@ -10,7 +10,12 @@ const formatNonBlobToFormDataProperty = (property: unknown) =>
 const isNeedFormatToFormData = <T>(
   config: ApiRequestConfig<T>
 ): config is RequireSingleField<ApiRequestConfig<T>, 'data'> =>
-  !!(config.method !== 'GET' && config.formData && isObject(config.data));
+  !!(
+    config.method !== 'GET' &&
+    config.formData &&
+    isObject(config.data) &&
+    !(config.data instanceof FormData)
+  );
 
 const formatToFormData = <T extends Record<string, unknown>>(
   data: T
@@ -18,12 +23,21 @@ const formatToFormData = <T extends Record<string, unknown>>(
   Object.keys(data || {}).reduce((formData, key) => {
     const property = data[key];
 
-    const value =
-      property instanceof Blob
-        ? property
-        : formatNonBlobToFormDataProperty(property);
+    if (Array.isArray(property)) {
+      property.forEach(prop => {
+        const value =
+          prop instanceof Blob ? prop : formatNonBlobToFormDataProperty(prop);
 
-    formData.append(key, value);
+        formData.append(key, value);
+      });
+    } else {
+      const value =
+        property instanceof Blob
+          ? property
+          : formatNonBlobToFormDataProperty(property);
+
+      formData.append(key, value);
+    }
 
     return formData;
   }, new FormData());

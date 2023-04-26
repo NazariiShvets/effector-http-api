@@ -12,13 +12,27 @@ describe('formatToFormData', () => {
   });
 
   it('should not transform Blob', () => {
-    const blob = new Blob(['']);
+    const blob = new Blob(['1']);
 
     const data = formatToFormData({ value: blob });
 
     expect(Object.fromEntries(data)).toMatchInlineSnapshot(`
       Object {
         "value": File {},
+      }
+    `);
+  });
+
+  it('should transform arrays', () => {
+    const blobs = [new Blob(['1']), new Blob(['2']), new Blob(['3'])];
+
+    const data = formatToFormData({ files: blobs });
+
+    expect(data.getAll('files')).toHaveLength(blobs.length);
+
+    expect(Object.fromEntries(data)).toMatchInlineSnapshot(`
+      Object {
+        "files": File {},
       }
     `);
   });
